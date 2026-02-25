@@ -4,6 +4,7 @@
     "type": "module",
     "dependencies": {
         "alpinejs": "^3.14.9",
+        "firebase": "^12.9.0",
         "leaflet": "^1.9.4"
     },
     "scripts": {

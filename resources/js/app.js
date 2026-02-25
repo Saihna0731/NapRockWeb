@@ -1,4 +1,5 @@
 import './bootstrap';
+import { child, firebaseApp, firebaseDatabase, get, push, ref, set } from './firebase';
 
 import Alpine from 'alpinejs';
 
@@ -11,6 +12,13 @@ import markerShadowUrl from 'leaflet/dist/images/marker-shadow.png';
 
 window.Alpine = Alpine;
 window.L = L;
+window.firebaseApp = firebaseApp;
+window.firebaseDatabase = firebaseDatabase;
+window.firebaseRef = ref;
+window.firebaseSet = set;
+window.firebaseGet = get;
+window.firebaseChild = child;
+window.firebasePush = push;
 
 // Fix Leaflet default marker icons when bundling with Vite.
 delete L.Icon.Default.prototype._getIconUrl;

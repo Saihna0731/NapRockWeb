@@ -17,7 +17,7 @@
     @keydown.escape.window="closeModal()"
     class="bg-background-light dark:bg-background-dark text-[#111813] dark:text-white transition-colors duration-200 font-display"
 >
-<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-border-muted dark:border-[#2a3a2e] px-8 py-3 bg-white dark:bg-background-dark sticky top-0 z-50">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-border-muted dark:border-[#2a3a2e] px-8 py-3 bg-white dark:bg-background-dark sticky top-0 z-[2000]">
     <div class="flex items-center gap-8">
         <div class="flex items-center gap-3">
             <a class="flex items-center justify-center size-10 bg-primary rounded-lg text-background-dark font-black text-lg" href="{{ route('home') }}">EST</a>
@@ -112,9 +112,64 @@
             </div>
         </div>
 
+        <section class="bg-white dark:bg-[#1a2e21] p-6 rounded-xl border border-border-muted dark:border-[#2a3a2e]">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h3 class="text-sm font-black">Firebase Realtime Database Test</h3>
+                    <p class="text-xs text-text-muted">Mock ESP32 telemetry бичиж/уншаад холболтоо dashboard дээр шууд шалгана.</p>
+                </div>
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-black"
+                      :class="firebaseStatus === 'connected' ? 'bg-primary/20 text-[#111813]' : (firebaseStatus === 'error' ? 'bg-red-500/20 text-red-600' : 'bg-background-light dark:bg-background-dark/40')"
+                      x-text="firebaseStatusLabel()"></span>
+            </div>
+
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-5 gap-3">
+                <label class="flex flex-col gap-1 text-xs font-bold text-text-muted">
+                    Device ID
+                    <input type="text" x-model.trim="mockDeviceId" class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 px-3 py-2 text-sm font-semibold text-[#111813] dark:text-white focus:ring-0" placeholder="esp32-001" />
+                </label>
+                <label class="flex flex-col gap-1 text-xs font-bold text-text-muted">
+                    Sound (dB)
+                    <input type="number" x-model.number="mockSoundDb" class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 px-3 py-2 text-sm font-semibold text-[#111813] dark:text-white focus:ring-0" />
+                </label>
+                <label class="flex flex-col gap-1 text-xs font-bold text-text-muted">
+                    Temperature (°C)
+                    <input type="number" x-model.number="mockTemperatureC" class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 px-3 py-2 text-sm font-semibold text-[#111813] dark:text-white focus:ring-0" />
+                </label>
+                <label class="flex flex-col gap-1 text-xs font-bold text-text-muted">
+                    Latitude
+                    <input type="number" step="any" x-model.number="mockLatitude" class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 px-3 py-2 text-sm font-semibold text-[#111813] dark:text-white focus:ring-0" />
+                </label>
+                <label class="flex flex-col gap-1 text-xs font-bold text-text-muted">
+                    Longitude
+                    <input type="number" step="any" x-model.number="mockLongitude" class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 px-3 py-2 text-sm font-semibold text-[#111813] dark:text-white focus:ring-0" />
+                </label>
+            </div>
+
+            <div class="mt-4 flex flex-wrap gap-2">
+                <button type="button" class="px-4 py-2 rounded-lg bg-[#111813] text-white text-xs font-black hover:bg-black" @click="testFirebaseConnection()" :disabled="firebaseBusy">
+                    Test Connection
+                </button>
+                <button type="button" class="px-4 py-2 rounded-lg bg-primary text-[#111813] text-xs font-black hover:opacity-90" @click="saveMockEsp32()" :disabled="firebaseBusy">
+                    Save Mock ESP32
+                </button>
+                <button type="button" class="px-4 py-2 rounded-lg border border-border-muted dark:border-[#2a3a2e] text-xs font-black" @click="loadMockEsp32()" :disabled="firebaseBusy">
+                    Load Latest
+                </button>
+            </div>
+
+            <div class="mt-4 rounded-xl border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 p-3">
+                <p class="text-[10px] uppercase tracking-widest font-black text-text-muted">Result</p>
+                <p class="mt-2 text-xs font-semibold" x-text="firebaseMessage"></p>
+                <template x-if="mockLatest">
+                    <p class="mt-2 text-[11px] text-text-muted" x-text="`Latest => ${mockLatest.device_id} | ${mockLatest.sound_db} dB | ${mockLatest.temperature_c}°C | ${mockLatest.recorded_at}`"></p>
+                </template>
+            </div>
+        </section>
+
         <div class="grid grid-cols-12 gap-6">
             <div class="col-span-12 xl:col-span-8">
-                <div class="bg-white dark:bg-[#1a2e21] p-2 rounded-xl border border-border-muted dark:border-[#2a3a2e] h-160 relative overflow-hidden group">
+                <div class="bg-white dark:bg-[#1a2e21] p-2 rounded-xl border border-border-muted dark:border-[#2a3a2e] h-160 relative z-0 overflow-hidden group">
                     <div class="w-full h-full rounded-lg relative overflow-hidden">
                         <div x-ref="leafletMap" class="absolute inset-0"></div>
                         <div class="absolute top-3 left-3 rounded-xl border border-border-muted dark:border-[#2a3a2e] bg-white/90 dark:bg-background-dark/80 backdrop-blur px-3 py-2">
@@ -526,10 +581,28 @@
             map: null,
             markerLayer: null,
 
+            firebaseStatus: 'idle',
+            firebaseBusy: false,
+            firebaseMessage: 'Ready to test Firebase connection.',
+            firebaseAutoSyncEnabled: true,
+            mockDeviceId: 'esp32-001',
+            mockSoundDb: 61,
+            mockTemperatureC: 27.4,
+            mockLatitude: -3.32,
+            mockLongitude: -62.02,
+            mockLatest: null,
+
             init() {
                 this.lastUpdatedAt = new Date();
                 this.$nextTick(() => this.initLeaflet());
                 this.startPolling();
+            },
+
+            firebaseStatusLabel() {
+                if (this.firebaseStatus === 'connected') return 'Firebase Connected';
+                if (this.firebaseStatus === 'error') return 'Firebase Error';
+                if (this.firebaseStatus === 'testing') return 'Testing...';
+                return 'Not Tested';
             },
 
             get lastUpdatedLabel() {
@@ -548,7 +621,7 @@
             },
 
             visibleStations() {
-                return this.stations.filter((station) => this.passesZone(station));
+                return this.uniqueStations(this.stations).filter((station) => this.passesZone(station));
             },
 
             openStation(station) {
@@ -623,18 +696,317 @@
                     const payload = await response.json();
                     const stations = payload?.stations;
                     if (Array.isArray(stations)) {
-                        this.stations = stations;
+                        this.stations = await this.mergeWithFirebaseStations(stations);
                         this.lastUpdatedAt = new Date();
 
                         this.refreshLeafletMarkers(false);
 
                         if (this.modalOpen && this.selectedStation?.id) {
-                            const updated = this.stations.find((s) => s.id === this.selectedStation.id);
+                            const selectedId = this.stationId(this.selectedStation);
+                            const updated = this.stations.find((s) => this.stationId(s) === selectedId);
                             if (updated) this.selectedStation = updated;
                         }
                     }
                 } catch (e) {
                     // ignore transient network errors
+                }
+            },
+
+            stationId(station) {
+                if (!station || typeof station !== 'object') return '';
+                const id = station.id ?? station.device_id ?? station.label;
+                return typeof id === 'string' ? id.trim() : '';
+            },
+
+            uniqueStations(stations) {
+                const byId = new Map();
+
+                for (const station of Array.isArray(stations) ? stations : []) {
+                    const id = this.stationId(station);
+                    if (!id) continue;
+
+                    const previous = byId.get(id);
+                    if (!previous) {
+                        byId.set(id, station);
+                        continue;
+                    }
+
+                    byId.set(id, {
+                        ...previous,
+                        ...station,
+                        telemetry: {
+                            ...(previous.telemetry || {}),
+                            ...(station.telemetry || {}),
+                        },
+                        baseline: {
+                            ...(previous.baseline || {}),
+                            ...(station.baseline || {}),
+                        },
+                        ml: {
+                            ...(previous.ml || {}),
+                            ...(station.ml || {}),
+                            species: {
+                                ...(previous?.ml?.species || {}),
+                                ...(station?.ml?.species || {}),
+                            },
+                        },
+                        coordinates: {
+                            ...(previous.coordinates || {}),
+                            ...(station.coordinates || {}),
+                        },
+                    });
+                }
+
+                return Array.from(byId.values());
+            },
+
+            defaultMockCoordinates(deviceId) {
+                const seed = String(deviceId || 'esp32').split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+                return {
+                    lat: -3.2 - ((seed % 40) / 100),
+                    lng: -62.0 + ((seed % 50) / 100),
+                };
+            },
+
+            createStationFromMock(deviceId, latest) {
+                const fallback = this.defaultMockCoordinates(deviceId);
+                const lat = Number(latest?.coordinates?.lat);
+                const lng = Number(latest?.coordinates?.lng);
+
+                return {
+                    id: deviceId,
+                    label: latest?.label || deviceId,
+                    area_label: latest?.area_label || `Mock ${deviceId}`,
+                    zone: latest?.zone || 'forest',
+                    area: latest?.area || 'Mock ESP32 Area',
+                    coordinates: {
+                        lat: Number.isFinite(lat) ? lat : fallback.lat,
+                        lng: Number.isFinite(lng) ? lng : fallback.lng,
+                    },
+                    hardware: {
+                        mcu: 'ESP32',
+                        mic: 'INMP441',
+                    },
+                    telemetry: {
+                        temperature_c: Number(latest?.temperature_c ?? latest?.telemetry?.temperature_c ?? 0),
+                        sound_db: Number(latest?.sound_db ?? latest?.telemetry?.sound_db ?? 0),
+                        dominant_hz: Number(latest?.dominant_hz ?? latest?.telemetry?.dominant_hz ?? 0),
+                        recorded_at: latest?.recorded_at || new Date().toISOString(),
+                    },
+                    baseline: {
+                        temperature_c: 27,
+                        sound_db: 60,
+                        activity_det_per_hr: 65,
+                    },
+                    ml: {
+                        status: 'Healthy',
+                        eco_score: 82,
+                        confidence_pct: 89,
+                        activity_det_per_hr: 72,
+                        species: {
+                            common_name: 'Mock Bird',
+                            scientific_name: 'Aves mockus',
+                            image_url: '',
+                        },
+                        recorded_at: latest?.recorded_at || new Date().toISOString(),
+                    },
+                    status: 'online',
+                };
+            },
+
+            async fetchFirebaseMockStations() {
+                const handles = this.getFirebaseHandles();
+                if (!handles) return [];
+                if (!this.firebaseAutoSyncEnabled) return [];
+
+                try {
+                    const rootRef = handles.ref(handles.db, 'esp32_mock');
+                    const rootSnap = await this.withTimeout(handles.get(rootRef), 'Fetch mock stations', 4000);
+                    if (!rootSnap.exists()) return [];
+
+                    const rows = rootSnap.val() || {};
+                    return Object.entries(rows).map(([deviceId, value]) => {
+                        const latest = value?.latest || value;
+                        return this.createStationFromMock(deviceId, latest);
+                    });
+                } catch (error) {
+                    const message = String(error?.message || '');
+                    if (message.includes('ERR_NAME_NOT_RESOLVED') || message.includes('timeout')) {
+                        this.firebaseAutoSyncEnabled = false;
+                    }
+                    return [];
+                }
+            },
+
+            async mergeWithFirebaseStations(apiStations) {
+                const firebaseStations = await this.fetchFirebaseMockStations();
+                return this.uniqueStations([...(Array.isArray(apiStations) ? apiStations : []), ...firebaseStations]);
+            },
+
+            getFirebaseHandles() {
+                const db = window.firebaseDatabase;
+                const ref = window.firebaseRef;
+                const set = window.firebaseSet;
+                const get = window.firebaseGet;
+                const child = window.firebaseChild;
+                const push = window.firebasePush;
+
+                if (!db || !ref || !set || !get || !child || !push) {
+                    return null;
+                }
+
+                return { db, ref, set, get, child, push };
+            },
+
+            async withTimeout(promise, label, timeoutMs = 10000) {
+                let timerId;
+
+                const timeoutPromise = new Promise((_, reject) => {
+                    timerId = setTimeout(() => {
+                        reject(new Error(`${label} timeout (${Math.round(timeoutMs / 1000)}s). Firebase URL / Rules шалгана уу.`));
+                    }, timeoutMs);
+                });
+
+                try {
+                    return await Promise.race([promise, timeoutPromise]);
+                } finally {
+                    clearTimeout(timerId);
+                }
+            },
+
+            async testFirebaseConnection() {
+                const handles = this.getFirebaseHandles();
+                if (!handles) {
+                    this.firebaseStatus = 'error';
+                    this.firebaseMessage = 'Firebase config дутуу байна. `.env` дээр VITE_FIREBASE_* утгуудыг шалгана уу.';
+                    return;
+                }
+
+                this.firebaseBusy = true;
+                this.firebaseStatus = 'testing';
+                this.firebaseAutoSyncEnabled = true;
+
+                try {
+                    const pingRef = handles.ref(handles.db, 'healthcheck/dashboard_ping');
+                    const payload = {
+                        source: 'dashboard',
+                        ts: new Date().toISOString(),
+                        ok: true,
+                    };
+
+                    await this.withTimeout(handles.set(pingRef, payload), 'Test write');
+                    const snap = await this.withTimeout(handles.get(pingRef), 'Test read');
+
+                    if (!snap.exists()) {
+                        throw new Error('healthcheck өгөгдөл олдсонгүй');
+                    }
+
+                    this.firebaseStatus = 'connected';
+                    this.firebaseMessage = `Connection OK: ${snap.val().ts}`;
+                } catch (error) {
+                    this.firebaseStatus = 'error';
+                    this.firebaseMessage = `Connection failed: ${error?.message || 'Unknown error'}`;
+                } finally {
+                    this.firebaseBusy = false;
+                }
+            },
+
+            buildMockPayload() {
+                const deviceId = this.mockDeviceId || 'esp32-001';
+                const soundDb = Number(this.mockSoundDb);
+                const temperatureC = Number(this.mockTemperatureC);
+                const latitude = Number(this.mockLatitude);
+                const longitude = Number(this.mockLongitude);
+                const dominantHz = Math.round(1800 + Math.random() * 2200);
+                const fallbackCoords = this.defaultMockCoordinates(deviceId);
+
+                return {
+                    device_id: deviceId,
+                    label: deviceId,
+                    area_label: `Mock ${deviceId}`,
+                    zone: 'forest',
+                    area: 'Mock ESP32 Area',
+                    sound_db: Number.isFinite(soundDb) ? soundDb : 60,
+                    temperature_c: Number.isFinite(temperatureC) ? temperatureC : 27,
+                    dominant_hz: dominantHz,
+                    coordinates: {
+                        lat: Number.isFinite(latitude) ? latitude : fallbackCoords.lat,
+                        lng: Number.isFinite(longitude) ? longitude : fallbackCoords.lng,
+                    },
+                    recorded_at: new Date().toISOString(),
+                    source: 'web-dashboard-mock',
+                };
+            },
+
+            async saveMockEsp32() {
+                const handles = this.getFirebaseHandles();
+                if (!handles) {
+                    this.firebaseStatus = 'error';
+                    this.firebaseMessage = 'Firebase config дутуу байна. `.env` дээр VITE_FIREBASE_* утгуудыг шалгана уу.';
+                    return;
+                }
+
+                this.firebaseBusy = true;
+                this.firebaseAutoSyncEnabled = true;
+                try {
+                    const payload = this.buildMockPayload();
+                    const basePath = `esp32_mock/${payload.device_id}`;
+                    const latestRef = handles.ref(handles.db, `${basePath}/latest`);
+                    const historyRef = handles.ref(handles.db, `${basePath}/history`);
+
+                    await this.withTimeout(handles.set(latestRef, payload), 'Save latest');
+                    await this.withTimeout(handles.push(historyRef, payload), 'Save history');
+
+                    this.mockLatest = payload;
+                    this.stations = await this.mergeWithFirebaseStations(this.stations);
+                    this.refreshLeafletMarkers(true);
+                    this.firebaseStatus = 'connected';
+                    this.firebaseMessage = `Saved mock data for ${payload.device_id}`;
+                } catch (error) {
+                    this.firebaseStatus = 'error';
+                    this.firebaseMessage = `Save failed: ${error?.message || 'Unknown error'}`;
+                } finally {
+                    this.firebaseBusy = false;
+                }
+            },
+
+            async loadMockEsp32() {
+                const handles = this.getFirebaseHandles();
+                if (!handles) {
+                    this.firebaseStatus = 'error';
+                    this.firebaseMessage = 'Firebase config дутуу байна. `.env` дээр VITE_FIREBASE_* утгуудыг шалгана уу.';
+                    return;
+                }
+
+                this.firebaseBusy = true;
+                this.firebaseAutoSyncEnabled = true;
+                try {
+                    const deviceId = this.mockDeviceId || 'esp32-001';
+                    const latestRef = handles.ref(handles.db, `esp32_mock/${deviceId}/latest`);
+                    const snap = await this.withTimeout(handles.get(latestRef), 'Load latest');
+
+                    if (!snap.exists()) {
+                        this.mockLatest = null;
+                        this.firebaseStatus = 'connected';
+                        this.firebaseMessage = `No data found for ${deviceId}`;
+                        return;
+                    }
+
+                    this.mockLatest = snap.val();
+                    if (this.mockLatest?.coordinates?.lat != null) this.mockLatitude = Number(this.mockLatest.coordinates.lat);
+                    if (this.mockLatest?.coordinates?.lng != null) this.mockLongitude = Number(this.mockLatest.coordinates.lng);
+                    if (this.mockLatest?.temperature_c != null) this.mockTemperatureC = Number(this.mockLatest.temperature_c);
+                    if (this.mockLatest?.sound_db != null) this.mockSoundDb = Number(this.mockLatest.sound_db);
+
+                    this.stations = await this.mergeWithFirebaseStations(this.stations);
+                    this.refreshLeafletMarkers(true);
+                    this.firebaseStatus = 'connected';
+                    this.firebaseMessage = `Loaded latest data for ${deviceId}`;
+                } catch (error) {
+                    this.firebaseStatus = 'error';
+                    this.firebaseMessage = `Load failed: ${error?.message || 'Unknown error'}`;
+                } finally {
+                    this.firebaseBusy = false;
                 }
             },
 
@@ -703,7 +1075,8 @@
 
             areaStations() {
                 if (!this.selectedStation?.area_label) return [];
-                return this.stations.filter((s) => s?.area_label === this.selectedStation.area_label);
+                const sameArea = this.stations.filter((s) => s?.area_label === this.selectedStation.area_label);
+                return this.uniqueStations(sameArea);
             },
 
             areaBirds() {

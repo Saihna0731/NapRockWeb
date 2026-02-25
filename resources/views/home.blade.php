@@ -311,4 +311,36 @@
 </footer>
 
 </body>
+</body
+    </div id="birdData">Waiting data...</div>Private IPv4 address assignment
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+// 🔑 Чиний config (өөрчлөхгүй)
+const firebaseConfig = {
+  apiKey: "AIzaSyDlfkN6pIBrlJnL9Yin5v001Q6eqAkBqGs",
+  authDomain: "est-monitoring-61c9d.firebaseapp.com",
+  databaseURL: "https://est-monitoring-61c9d-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "est-monitoring-61c9d",
+  storageBucket: "est-monitoring-61c9d.firebasestorage.app",
+  messagingSenderId: "376144481111",
+  appId: "1:376144481111:web:f9d03b82e7928d1b6c0c12"
+};
+
+// 🚀 Firebase асаах
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// 📡 Унших зам (Firebase Data дээр таарах ёстой)
+const birdRef = ref(db, "est/bird");
+
+onValue(birdRef, (snapshot) => {
+  document.getElementById("birdData").innerText =
+    JSON.stringify(snapshot.val());
+});
+</script>
+</body>
+
 </html>
