@@ -2,26 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\StationFeedService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 
 class DashboardController extends Controller
 {
-    public function __invoke(Request $request)
+    public function __invoke(Request $request, StationFeedService $stationFeed)
     {
-        $stations = config('stations', []);
-
-        $stations = array_map(static function (array $station): array {
-            $id = $station['id'] ?? null;
-
-            if (!is_string($id) || $id === '') {
-                return $station;
-            }
-
-            $override = Cache::get("station:{$id}", []);
-
-            return array_replace_recursive($station, is_array($override) ? $override : []);
-        }, $stations);
+        $stations = $stationFeed->stations();
 
         return view('dashboard', [
             'stations' => $stations,

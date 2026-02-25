@@ -2,26 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\StationFeedService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
 
 class StationApiController extends Controller
 {
-    public function __invoke(): JsonResponse
+    public function __invoke(StationFeedService $stationFeed): JsonResponse
     {
-        $stations = config('stations', []);
-
-        $stations = array_map(static function (array $station): array {
-            $id = $station['id'] ?? null;
-
-            if (!is_string($id) || $id === '') {
-                return $station;
-            }
-
-            $override = Cache::get("station:{$id}", []);
-
-            return array_replace_recursive($station, is_array($override) ? $override : []);
-        }, $stations);
+        $stations = $stationFeed->stations();
 
         return response()->json(['stations' => $stations]);
     }
