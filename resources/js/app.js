@@ -1,4 +1,5 @@
 import './bootstrap';
+import '../css/app.css';
 import { child, firebaseApp, firebaseDatabase, get, push, ref, set } from './firebase';
 
 import Alpine from 'alpinejs';
