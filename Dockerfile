@@ -50,17 +50,19 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     gd \
   && php -v
 
-# Cloud Run-friendly php-fpm socket (nginx -> /tmp)
-RUN sed -i 's|^listen = .*|listen = /tmp/php-fpm.sock|' /usr/local/etc/php-fpm.d/www.conf \
+# Cloud Run-friendly php-fpm (nginx -> 127.0.0.1:9000)
+RUN sed -i 's|^listen = .*|listen = 127.0.0.1:9000|' /usr/local/etc/php-fpm.d/www.conf \
   && { \
-    grep -q '^listen.owner' /usr/local/etc/php-fpm.d/www.conf && sed -i 's|^listen.owner = .*|listen.owner = www-data|' /usr/local/etc/php-fpm.d/www.conf || echo 'listen.owner = www-data' >> /usr/local/etc/php-fpm.d/www.conf; \
-  } \
-  && { \
-    grep -q '^listen.group' /usr/local/etc/php-fpm.d/www.conf && sed -i 's|^listen.group = .*|listen.group = www-data|' /usr/local/etc/php-fpm.d/www.conf || echo 'listen.group = www-data' >> /usr/local/etc/php-fpm.d/www.conf; \
-  } \
-  && { \
-    grep -q '^listen.mode' /usr/local/etc/php-fpm.d/www.conf && sed -i 's|^listen.mode = .*|listen.mode = 0660|' /usr/local/etc/php-fpm.d/www.conf || echo 'listen.mode = 0660' >> /usr/local/etc/php-fpm.d/www.conf; \
+    grep -q '^listen.allowed_clients' /usr/local/etc/php-fpm.d/www.conf \
+      && sed -i 's|^listen.allowed_clients = .*|listen.allowed_clients = 127.0.0.1|' /usr/local/etc/php-fpm.d/www.conf \
+      || echo 'listen.allowed_clients = 127.0.0.1' >> /usr/local/etc/php-fpm.d/www.conf; \
   }
+
+# Send PHP errors to stderr (shows up in Cloud Run logs)
+RUN { \
+    echo 'log_errors=On'; \
+    echo 'error_log=/proc/self/fd/2'; \
+  } > /usr/local/etc/php/conf.d/cloudrun-logging.ini
 
 # Configure nginx + supervisord
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
