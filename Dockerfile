@@ -65,6 +65,8 @@ RUN sed -i 's|^listen = .*|listen = /tmp/php-fpm.sock|' /usr/local/etc/php-fpm.d
 # Configure nginx + supervisord
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint
+RUN chmod +x /usr/local/bin/entrypoint
 
 WORKDIR /var/www
 
@@ -86,4 +88,4 @@ ENV APP_ENV=production \
 ENV PORT=8080
 EXPOSE 8080
 
-CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]
+CMD ["/usr/local/bin/entrypoint"]
