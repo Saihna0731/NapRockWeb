@@ -44,3 +44,15 @@ Add exactly what Google shows in your domain provider DNS.
 
 - Cloud Run filesystem is ephemeral. Don't store persistent uploads in `storage/app` unless you use a persistent storage solution.
 - For logs, keep `LOG_CHANNEL=stderr`.
+
+## Troubleshooting
+
+### 502 Bad Gateway
+
+Usually means **nginx can't reach php-fpm**. This repo configures php-fpm to listen on `/tmp/php-fpm.sock` and nginx to use that socket.
+
+To view logs:
+
+```bash
+gcloud run services logs read naprockweb-web --region asia-southeast1 --limit 200
+```

@@ -50,6 +50,18 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     gd \
   && php -v
 
+# Cloud Run-friendly php-fpm socket (nginx -> /tmp)
+RUN sed -i 's|^listen = .*|listen = /tmp/php-fpm.sock|' /usr/local/etc/php-fpm.d/www.conf \
+  && { \
+    grep -q '^listen.owner' /usr/local/etc/php-fpm.d/www.conf && sed -i 's|^listen.owner = .*|listen.owner = www-data|' /usr/local/etc/php-fpm.d/www.conf || echo 'listen.owner = www-data' >> /usr/local/etc/php-fpm.d/www.conf; \
+  } \
+  && { \
+    grep -q '^listen.group' /usr/local/etc/php-fpm.d/www.conf && sed -i 's|^listen.group = .*|listen.group = www-data|' /usr/local/etc/php-fpm.d/www.conf || echo 'listen.group = www-data' >> /usr/local/etc/php-fpm.d/www.conf; \
+  } \
+  && { \
+    grep -q '^listen.mode' /usr/local/etc/php-fpm.d/www.conf && sed -i 's|^listen.mode = .*|listen.mode = 0660|' /usr/local/etc/php-fpm.d/www.conf || echo 'listen.mode = 0660' >> /usr/local/etc/php-fpm.d/www.conf; \
+  }
+
 # Configure nginx + supervisord
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
