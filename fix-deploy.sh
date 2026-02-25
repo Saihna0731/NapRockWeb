@@ -23,7 +23,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(
             at: '*',
             headers: Request::HEADER_X_FORWARDED_FOR
-                | Request::HEADER_X_FORWARDED_HOST
                 | Request::HEADER_X_FORWARDED_PORT
                 | Request::HEADER_X_FORWARDED_PROTO
                 | Request::HEADER_X_FORWARDED_PREFIX,
@@ -98,7 +97,7 @@ server {
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
         fastcgi_param DOCUMENT_ROOT $realpath_root;
         fastcgi_param HTTP_X_FORWARDED_FOR $http_x_forwarded_for;
-        fastcgi_param HTTP_X_FORWARDED_HOST $http_x_forwarded_host;
+        fastcgi_param HTTP_X_FORWARDED_HOST $host;
         fastcgi_param HTTP_X_FORWARDED_PORT $http_x_forwarded_port;
         fastcgi_param HTTP_X_FORWARDED_PROTO $http_x_forwarded_proto;
         fastcgi_param HTTP_X_FORWARDED_PREFIX $http_x_forwarded_prefix;
