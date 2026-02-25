@@ -4,7 +4,7 @@
 FROM node:20-bookworm-slim AS nodebuild
 WORKDIR /app
 COPY package.json package-lock.json vite.config.js ./
-COPY .env.production .env.production
+COPY .env.example .env.production
 COPY resources ./resources
 COPY public ./public
 RUN npm ci
