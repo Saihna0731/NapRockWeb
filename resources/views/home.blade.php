@@ -27,7 +27,7 @@
         <nav class="hidden md:flex items-center gap-10">
             <div class="flex items-center gap-8">
                 <a class="text-sm font-semibold text-[#111813]/70 hover:text-primary transition-colors" href="{{ route('home') }}">Home</a>
-                <a class="text-sm font-semibold text-[#111813]/70 hover:text-primary transition-colors" href="#how-it-works">About</a>
+                <a class="text-sm font-semibold text-[#111813]/70 hover:text-primary transition-colors" href="#why-birds">About</a>
                 <a class="text-sm font-semibold text-[#111813]/70 hover:text-primary transition-colors" href="#insights">Technology</a>
             </div>
             <div class="h-6 w-px bg-[#dbe6df] dark:bg-[#2a3d31]"></div>
@@ -80,6 +80,77 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </section>
+
+    {{-- ===== WHY BIRDS? — Scientific Foundation ===== --}}
+    <section class="relative overflow-hidden bg-white dark:bg-[#0c1a11] py-20" id="why-birds">
+        {{-- decorative blobs --}}
+        <div class="absolute -top-20 -left-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-20 -right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="max-w-[1200px] mx-auto px-6 relative z-10">
+            {{-- heading --}}
+            <div class="flex flex-col items-center text-center mb-14 gap-4">
+                <span class="bg-primary/20 text-emerald-800 dark:text-primary px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest">Scientific Foundation</span>
+                <h2 class="text-4xl md:text-5xl font-black tracking-tight">Why <span class="text-primary">Birds</span>?</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-400 max-w-[680px] leading-relaxed">
+                    Birds are highly sensitive to environmental changes and are widely recognized as reliable indicators of ecosystem health.
+                    Changes in bird presence, diversity, and acoustic activity reflect shifts in habitat quality and ecosystem balance.
+                </p>
+            </div>
+
+            {{-- 4 feature cards --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-[900px] mx-auto">
+                {{-- card 1 --}}
+                <div class="group flex items-start gap-4 bg-[#f0faf3] dark:bg-[#152a1b] p-6 rounded-2xl border border-primary/15 hover:shadow-lg hover:shadow-primary/10 transition-all">
+                    <div class="shrink-0 size-11 rounded-full bg-primary flex items-center justify-center shadow-md">
+                        <span class="material-symbols-outlined text-white text-xl">bolt</span>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-base mb-1">Rapid Habitat Response</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">Birds respond rapidly to habitat disturbance, making them effective early-warning sentinels for ecological change.</p>
+                    </div>
+                </div>
+
+                {{-- card 2 --}}
+                <div class="group flex items-start gap-4 bg-[#f0faf3] dark:bg-[#152a1b] p-6 rounded-2xl border border-primary/15 hover:shadow-lg hover:shadow-primary/10 transition-all">
+                    <div class="shrink-0 size-11 rounded-full bg-primary flex items-center justify-center shadow-md">
+                        <span class="material-symbols-outlined text-white text-xl">diversity_3</span>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-base mb-1">Biodiversity Mirror</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">Bird diversity reflects ecosystem stability and overall biodiversity levels across habitats.</p>
+                    </div>
+                </div>
+
+                {{-- card 3 --}}
+                <div class="group flex items-start gap-4 bg-[#f0faf3] dark:bg-[#152a1b] p-6 rounded-2xl border border-primary/15 hover:shadow-lg hover:shadow-primary/10 transition-all">
+                    <div class="shrink-0 size-11 rounded-full bg-primary flex items-center justify-center shadow-md">
+                        <span class="material-symbols-outlined text-white text-xl">trending_up</span>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-base mb-1">Global Indicator</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">Bird population trends are used globally as key biodiversity indicators by conservation bodies.</p>
+                    </div>
+                </div>
+
+                {{-- card 4 --}}
+                <div class="group flex items-start gap-4 bg-[#f0faf3] dark:bg-[#152a1b] p-6 rounded-2xl border border-primary/15 hover:shadow-lg hover:shadow-primary/10 transition-all">
+                    <div class="shrink-0 size-11 rounded-full bg-primary flex items-center justify-center shadow-md">
+                        <span class="material-symbols-outlined text-white text-xl">graphic_eq</span>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-base mb-1">Acoustic Assessment</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">Acoustic monitoring of birds enables early, non-invasive ecosystem health assessment at scale.</p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- sources --}}
+            <p class="text-center text-xs text-gray-400 dark:text-gray-500 mt-10">
+                Sources: BirdLife International &middot; International Union for Conservation of Nature (IUCN)
+            </p>
         </div>
     </section>
 
