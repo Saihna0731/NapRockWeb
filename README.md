@@ -63,3 +63,5 @@ The Laravel framework is open-sourced software licensed under the [MIT license](
 Production deployment scripts and configuration templates are available in `deploy/README.md`.
 
 Cloud Run deployment instructions: `deploy/cloud-run.md`.
+
+GitHub Actions auto-deploy workflow: `.github/workflows/deploy-cloud-run.yml`.
