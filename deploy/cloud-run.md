@@ -17,7 +17,7 @@ gcloud run deploy naprockweb-web \
   --source . \
   --region asia-southeast1 \
   --allow-unauthenticated \
-  --set-env-vars APP_ENV=production,APP_DEBUG=false,LOG_CHANNEL=stderr \
+  --set-env-vars APP_ENV=production,APP_DEBUG=false,LOG_CHANNEL=stderr,SESSION_DRIVER=file,CACHE_STORE=file,QUEUE_CONNECTION=sync \
   --set-env-vars APP_URL=https://est-monitoring.online
 ```
 

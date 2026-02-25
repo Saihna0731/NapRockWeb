@@ -28,7 +28,6 @@ FROM php:8.2-fpm-bookworm AS runtime
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     nginx \
-    supervisor \
     git \
     unzip \
     libzip-dev \
@@ -84,7 +83,10 @@ RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
 ENV APP_ENV=production \
     APP_DEBUG=false \
-    LOG_CHANNEL=stderr
+  LOG_CHANNEL=stderr \
+  SESSION_DRIVER=file \
+  CACHE_STORE=file \
+  QUEUE_CONNECTION=sync
 
 # Cloud Run uses $PORT (default 8080)
 ENV PORT=8080
