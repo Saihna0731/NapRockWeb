@@ -176,33 +176,121 @@
                             Live
                         </a>
                     </div>
-                    {{-- Scrollable list --}}
+                    {{-- Scrollable accordion list --}}
                     <div class="flex-1 overflow-y-auto divide-y divide-border-muted dark:divide-[#2a3a2e]">
                         <template x-for="(item, idx) in speciesListItems()" :key="item.key">
-                            <button type="button"
-                                class="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-background-light dark:hover:bg-white/5 transition-colors"
-                                :class="selectedStation && item.station && stationId(item.station) === stationId(selectedStation) ? 'border-l-2 border-l-primary bg-primary/5' : 'border-l-2 border-l-transparent'"
-                                @click="item.station && openStation(item.station)"
-                            >
-                                <span class="text-xs font-black text-text-muted w-5 shrink-0 text-center" x-text="idx + 1"></span>
-                                <div class="size-10 rounded-lg overflow-hidden border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-background-dark shrink-0">
-                                    <img x-show="item.imageUrl" :src="item.imageUrl" alt="" class="size-full object-cover"/>
-                                    <div x-show="!item.imageUrl" class="size-full flex items-center justify-center text-text-muted">
-                                        <span class="material-symbols-outlined text-base">flutter_dash</span>
+                            <div x-data="{ open: false }">
+                                {{-- Row header --}}
+                                <button type="button"
+                                    class="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-background-light dark:hover:bg-white/5 transition-colors"
+                                    :class="[
+                                        selectedStation && item.station && stationId(item.station) === stationId(selectedStation) ? 'bg-primary/5' : '',
+                                        open ? 'border-l-2 border-l-primary' : 'border-l-2 border-l-transparent'
+                                    ]"
+                                    @click="open = !open; item.station && openStation(item.station)"
+                                >
+                                    <span class="text-xs font-black text-text-muted w-5 shrink-0 text-center" x-text="idx + 1"></span>
+                                    <div class="size-10 rounded-lg overflow-hidden border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-background-dark shrink-0">
+                                        <img x-show="item.imageUrl" :src="item.imageUrl" alt="" class="size-full object-cover"/>
+                                        <div x-show="!item.imageUrl" class="size-full flex items-center justify-center text-text-muted">
+                                            <span class="material-symbols-outlined text-base">flutter_dash</span>
+                                        </div>
                                     </div>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-xs font-black truncate" x-text="item.commonName"></p>
+                                        <p class="text-[10px] text-text-muted italic truncate" x-text="item.scientificName"></p>
+                                        <p class="text-[10px] text-text-muted truncate" x-text="item.stationLabel"></p>
+                                    </div>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <div class="text-right">
+                                            <span class="block px-2 py-0.5 rounded-full text-[10px] font-black mb-1"
+                                                  :class="item.status === 'Healthy' ? 'bg-primary/20 text-[#111813]' : 'bg-red-500/20 text-red-600'"
+                                                  x-text="item.status"></span>
+                                            <span class="text-[10px] font-black tabular-nums" x-text="item.confidence + '%'"></span>
+                                        </div>
+                                        <span class="material-symbols-outlined text-sm text-text-muted transition-transform duration-200"
+                                              :class="open ? 'rotate-180' : ''">expand_more</span>
+                                    </div>
+                                </button>
+
+                                {{-- Expandable detail --}}
+                                <div
+                                    x-show="open"
+                                    x-transition:enter="transition ease-out duration-200"
+                                    x-transition:enter-start="opacity-0 -translate-y-1"
+                                    x-transition:enter-end="opacity-100 translate-y-0"
+                                    x-transition:leave="transition ease-in duration-150"
+                                    x-transition:leave-start="opacity-100 translate-y-0"
+                                    x-transition:leave-end="opacity-0 -translate-y-1"
+                                    style="display:none"
+                                    class="px-4 pb-4 bg-background-light dark:bg-background-dark/30"
+                                >
+                                    {{-- Large image + scientific name --}}
+                                    <div class="flex gap-3 pt-3">
+                                        <div class="size-20 rounded-xl overflow-hidden border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-background-dark shrink-0">
+                                            <img x-show="item.imageUrl" :src="item.imageUrl" alt="" class="size-full object-cover"/>
+                                            <div x-show="!item.imageUrl" class="size-full flex items-center justify-center text-text-muted">
+                                                <span class="material-symbols-outlined text-3xl">flutter_dash</span>
+                                            </div>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-black" x-text="item.commonName"></p>
+                                            <p class="text-xs text-text-muted italic mt-0.5" x-text="item.scientificName"></p>
+                                            <p class="text-[10px] text-text-muted mt-1">Station: <span class="font-bold" x-text="item.stationLabel"></span></p>
+                                            <p class="text-[10px] text-text-muted">Coords: <span class="font-bold tabular-nums" x-text="item.station ? (item.station.coordinates?.lat + ', ' + item.station.coordinates?.lng) : '—'"></span></p>
+                                        </div>
+                                    </div>
+
+                                    {{-- Telemetry chips --}}
+                                    <div class="mt-3 grid grid-cols-3 gap-2">
+                                        <div class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-background-dark/50 p-2 text-center">
+                                            <p class="text-[9px] uppercase font-bold text-text-muted">Temp</p>
+                                            <p class="text-xs font-black mt-0.5"><span x-text="item.station?.telemetry?.temperature_c ?? '—'"></span>°C</p>
+                                        </div>
+                                        <div class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-background-dark/50 p-2 text-center">
+                                            <p class="text-[9px] uppercase font-bold text-text-muted">Sound</p>
+                                            <p class="text-xs font-black mt-0.5"><span x-text="item.station?.telemetry?.sound_db ?? '—'"></span> dB</p>
+                                        </div>
+                                        <div class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-background-dark/50 p-2 text-center">
+                                            <p class="text-[9px] uppercase font-bold text-text-muted">Eco</p>
+                                            <p class="text-xs font-black mt-0.5" x-text="item.station?.ml?.eco_score ?? '—'"></p>
+                                        </div>
+                                    </div>
+
+                                    {{-- Activity + confidence bar --}}
+                                    <div class="mt-3 space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-[10px] font-bold text-text-muted">AI Confidence</span>
+                                            <span class="text-[10px] font-black" x-text="item.confidence + '%'"></span>
+                                        </div>
+                                        <div class="h-1.5 w-full rounded-full bg-border-muted dark:bg-white/10 overflow-hidden">
+                                            <div class="h-full rounded-full bg-primary transition-all duration-500"
+                                                 :style="`width:${item.confidence}%`"></div>
+                                        </div>
+                                        <div class="flex items-center justify-between mt-1">
+                                            <span class="text-[10px] font-bold text-text-muted">Activity</span>
+                                            <span class="text-[10px] font-black" x-text="(item.station?.ml?.activity_det_per_hr ?? '—') + ' det/hr'"></span>
+                                        </div>
+                                    </div>
+
+                                    {{-- Why this status --}}
+                                    <div class="mt-3 rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-white/60 dark:bg-background-dark/40 p-3">
+                                        <p class="text-[9px] uppercase tracking-widest font-bold text-text-muted mb-2">Analysis</p>
+                                        <ul class="space-y-1">
+                                            <template x-for="(line, li) in stationConclusions(item.station)" :key="li">
+                                                <li class="text-[11px] font-medium text-[#111813] dark:text-white" x-text="'• ' + line"></li>
+                                            </template>
+                                        </ul>
+                                    </div>
+
+                                    {{-- Listen button --}}
+                                    <a href="{{ route('live') }}"
+                                       class="mt-3 flex items-center justify-center gap-2 w-full px-3 py-2 rounded-lg bg-[#111813] dark:bg-white text-white dark:text-[#111813] text-xs font-black hover:opacity-80 transition-opacity">
+                                        <span class="material-symbols-outlined text-sm">hearing</span>
+                                        Listen Live
+                                    </a>
                                 </div>
-                                <div class="min-w-0 flex-1">
-                                    <p class="text-xs font-black truncate" x-text="item.commonName"></p>
-                                    <p class="text-[10px] text-text-muted italic truncate" x-text="item.scientificName"></p>
-                                    <p class="text-[10px] text-text-muted truncate" x-text="item.stationLabel"></p>
-                                </div>
-                                <div class="text-right shrink-0">
-                                    <span class="block px-2 py-0.5 rounded-full text-[10px] font-black mb-1"
-                                          :class="item.status === 'Healthy' ? 'bg-primary/20 text-[#111813]' : 'bg-red-500/20 text-red-600'"
-                                          x-text="item.status"></span>
-                                    <span class="text-[10px] font-black tabular-nums" x-text="item.confidence + '%'"></span>
-                                </div>
-                            </button>
+                            </div>
                         </template>
                         <div x-show="speciesListItems().length === 0" class="flex flex-col items-center justify-center h-full p-8 text-center">
                             <span class="material-symbols-outlined text-4xl text-text-muted mb-3">flutter_dash</span>
@@ -309,14 +397,6 @@
                            :class="(selectedStation?.ml?.status === 'Healthy') ? 'text-primary' : 'text-red-500'"
                            x-text="selectedStation?.ml?.status ?? '—'"></p>
                     </div>
-                </div>
-                <div class="w-full mt-4 border-t border-border-muted dark:border-[#2a3a2e] pt-4">
-                    <p class="text-[9px] text-text-muted font-bold uppercase tracking-widest mb-2">Location</p>
-                    <p class="text-xs font-black tabular-nums" x-text="selectedStation ? (selectedStation.coordinates.lat + ', ' + selectedStation.coordinates.lng) : '—'"></p>
-                    <a href="{{ route('live') }}" class="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#111813] dark:bg-white text-white dark:text-[#111813] text-xs font-black hover:opacity-80 transition-opacity">
-                        <span class="material-symbols-outlined text-sm">hearing</span>
-                        Listen Live
-                    </a>
                 </div>
             </div>
         </div>
