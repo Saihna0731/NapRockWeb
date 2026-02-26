@@ -14,7 +14,7 @@
 </head>
 <body
     x-data="dashboardPage({{ \Illuminate\Support\Js::from($stations ?? []) }})"
-    @keydown.escape.window="closeModal()"
+    @keydown.escape.window="closePanel()"
     class="bg-background-light dark:bg-background-dark text-[#111813] dark:text-white transition-colors duration-200 font-display"
 >
 <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-border-muted dark:border-[#2a3a2e] px-8 py-3 bg-white dark:bg-background-dark sticky top-0 z-[2000]">
@@ -168,7 +168,7 @@
         </section>
 
         <div class="grid grid-cols-12 gap-6">
-            <div class="col-span-12 xl:col-span-8">
+            <div class="col-span-12 xl:col-span-7">
                 <div class="bg-white dark:bg-[#1a2e21] p-2 rounded-xl border border-border-muted dark:border-[#2a3a2e] h-160 relative z-0 overflow-hidden group">
                     <div class="w-full h-full rounded-lg relative overflow-hidden">
                         <div x-ref="leafletMap" class="absolute inset-0"></div>
@@ -180,7 +180,117 @@
                 </div>
             </div>
 
-            <div class="col-span-12 xl:col-span-4 space-y-6">
+            <div class="col-span-12 xl:col-span-5 space-y-6">
+
+                {{-- ══ Device Detail Side Panel (replaces centre modal) ══ --}}
+                <div
+                    x-show="selectedStation"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 translate-y-2"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100 translate-y-0"
+                    x-transition:leave-end="opacity-0 translate-y-2"
+                    style="display:none"
+                    class="bg-white dark:bg-[#1a2e21] rounded-xl border border-primary/40 shadow-lg overflow-hidden"
+                >
+                    {{-- Header --}}
+                    <div class="px-5 pt-4 pb-3 border-b border-border-muted dark:border-[#2a3a2e] flex items-start justify-between gap-3 bg-primary/5">
+                        <div class="min-w-0">
+                            <p class="text-[10px] uppercase tracking-[0.18em] font-bold text-accent-blue">Station Analytics</p>
+                            <h3 class="text-base font-black truncate leading-tight mt-0.5" x-text="selectedStation ? `${selectedStation.label}: ${selectedStation.id}` : ''"></h3>
+                            <p class="text-[11px] text-text-muted mt-0.5" x-text="selectedStation?.area ?? ''"></p>
+                        </div>
+                        <button type="button"
+                            class="p-1.5 rounded-lg hover:bg-background-light dark:hover:bg-white/10 text-text-muted hover:text-[#111813] dark:hover:text-white transition-colors shrink-0"
+                            @click="closePanel()"
+                        >
+                            <span class="material-symbols-outlined text-base">close</span>
+                        </button>
+                    </div>
+
+                    <div class="p-4 space-y-4">
+                        {{-- Hardware chips --}}
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 p-2.5">
+                                <p class="text-[9px] uppercase tracking-widest font-bold text-text-muted">MCU</p>
+                                <p class="text-xs font-bold mt-0.5" x-text="selectedStation?.hardware?.mcu ?? '—'"></p>
+                            </div>
+                            <div class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 p-2.5">
+                                <p class="text-[9px] uppercase tracking-widest font-bold text-text-muted">Mic</p>
+                                <p class="text-xs font-bold mt-0.5" x-text="selectedStation?.hardware?.mic ?? '—'"></p>
+                            </div>
+                            <div class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 p-2.5">
+                                <p class="text-[9px] uppercase tracking-widest font-bold text-text-muted">Temp</p>
+                                <p class="text-xs font-bold mt-0.5">
+                                    <span x-text="selectedStation?.telemetry?.temperature_c ?? '—'"></span>°C
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Bird ID card --}}
+                        <div class="rounded-xl border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/30 p-3">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex items-start gap-3 min-w-0">
+                                    <div class="size-11 rounded-xl overflow-hidden border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-background-dark shrink-0">
+                                        <img x-show="selectedStation?.ml?.species?.image_url" :src="selectedStation?.ml?.species?.image_url" alt="Bird" class="size-full object-cover" />
+                                        <div x-show="!selectedStation?.ml?.species?.image_url" class="size-full flex items-center justify-center text-text-muted">
+                                            <span class="material-symbols-outlined text-sm">pets</span>
+                                        </div>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-[9px] uppercase tracking-widest font-bold text-text-muted">Bird ID (Edge AI)</p>
+                                        <p class="text-sm font-black truncate leading-tight mt-0.5" x-text="selectedStation?.ml?.species?.common_name ?? '—'"></p>
+                                        <p class="text-[10px] text-text-muted italic" x-text="selectedStation?.ml?.species?.scientific_name ?? ''"></p>
+                                    </div>
+                                </div>
+                                <div class="text-right shrink-0">
+                                    <p class="text-[9px] uppercase tracking-widest font-bold text-text-muted">Confidence</p>
+                                    <p class="text-lg font-black leading-tight"><span x-text="selectedStation?.ml?.confidence_pct ?? '—'"></span>%</p>
+                                </div>
+                            </div>
+
+                            <div class="mt-3 flex flex-wrap gap-1.5 items-center">
+                                <span
+                                    class="px-2.5 py-0.5 rounded-full text-[10px] font-black"
+                                    :class="(selectedStation?.ml?.status === 'Healthy') ? 'bg-primary/20 text-[#111813]' : 'bg-red-500/20 text-red-600'"
+                                    x-text="selectedStation?.ml?.status ?? '—'"
+                                ></span>
+                                <span class="text-[10px] text-text-muted font-bold">Eco score:</span>
+                                <span class="text-[10px] font-black" x-text="selectedStation?.ml?.eco_score ?? '—'"></span>
+                                <span class="text-[10px] text-text-muted font-bold">Activity:</span>
+                                <span class="text-[10px] font-black"><span x-text="selectedStation?.ml?.activity_det_per_hr ?? '—'"></span> det/hr</span>
+                            </div>
+
+                            {{-- Why this status --}}
+                            <div class="mt-3 rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-white/60 dark:bg-background-dark/40 p-3">
+                                <p class="text-[9px] uppercase tracking-widest font-bold text-text-muted">Why this status?</p>
+                                <ul class="mt-2 space-y-1">
+                                    <template x-for="(line, idx) in stationConclusions(selectedStation)" :key="idx">
+                                        <li class="text-xs font-medium text-text-muted">
+                                            <span class="font-bold text-[#111813] dark:text-white" x-text="'• ' + line"></span>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {{-- Location + Listen --}}
+                        <div class="flex items-center justify-between gap-3 rounded-xl bg-background-light dark:bg-white/5 border border-border-muted dark:border-[#2a3a2e] px-4 py-3">
+                            <div>
+                                <p class="text-[10px] font-bold text-text-muted">Location</p>
+                                <p class="text-xs font-bold tabular-nums" x-text="selectedStation ? `${selectedStation.coordinates.lat}, ${selectedStation.coordinates.lng}` : ''"></p>
+                            </div>
+                            <a href="{{ route('live') }}"
+                               class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#111813] dark:bg-white text-white dark:text-[#111813] text-xs font-black hover:opacity-80 transition-opacity">
+                                <span class="material-symbols-outlined text-sm">hearing</span>
+                                Listen
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {{-- ══ End Device Detail Side Panel ══ --}}
+
                 <div class="bg-white dark:bg-[#1a2e21] p-6 rounded-xl border border-border-muted dark:border-[#2a3a2e]">
                     <div class="flex items-center justify-between gap-4 mb-6">
                         <h3 class="text-xs font-bold text-text-muted uppercase tracking-wider">Top Species Detected</h3>
@@ -237,9 +347,11 @@
                             <p class="text-lg font-black mt-1" x-text="selectedStation?.area_label ?? '—'"></p>
                             <p class="text-xs text-text-muted" x-text="selectedStation?.area ?? ''"></p>
                         </div>
-                        <span class="px-2.5 py-1 rounded-full text-[10px] font-black"
-                              :class="(selectedStation?.ml?.status === 'Healthy') ? 'bg-primary/20 text-[#111813]' : 'bg-red-500/20 text-red-600'"
-                              x-text="selectedStation?.ml?.status ?? '—'"></span>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black"
+                                  :class="(selectedStation?.ml?.status === 'Healthy') ? 'bg-primary/20 text-[#111813]' : 'bg-red-500/20 text-red-600'"
+                                  x-text="selectedStation?.ml?.status ?? '—'"></span>
+                        </div>
                     </div>
 
                     <div class="mt-5">
@@ -459,112 +571,6 @@
     </main>
 </div>
 
-<!-- Station modal (Alpine.js) -->
-<div
-    x-show="modalOpen"
-    x-transition.opacity
-    style="display: none"
-    class="fixed inset-0 z-60 flex items-center justify-center p-4"
-    aria-modal="true"
-    role="dialog"
->
-    <div class="absolute inset-0 bg-black/50" @click="closeModal()"></div>
-
-    <div
-        x-show="modalOpen"
-        x-transition
-        class="relative w-full max-w-lg rounded-2xl bg-white dark:bg-background-dark border border-border-muted dark:border-[#2a3a2e] shadow-2xl overflow-hidden"
-    >
-        <div class="p-5 border-b border-border-muted dark:border-[#2a3a2e] flex items-start justify-between gap-4">
-            <div class="min-w-0">
-                <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-accent-blue">Station Analytics</p>
-                <h3 class="text-xl font-black truncate" x-text="selectedStation ? `${selectedStation.label}: ${selectedStation.id}` : 'Station'"></h3>
-                <p class="text-xs text-text-muted" x-text="selectedStation ? selectedStation.area : ''"></p>
-            </div>
-            <button
-                type="button"
-                class="p-2 rounded-lg hover:bg-background-light dark:hover:bg-white/5"
-                @click="closeModal()"
-            >
-                <span class="material-symbols-outlined">close</span>
-            </button>
-        </div>
-
-        <div class="p-5 space-y-5">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div class="rounded-xl border border-border-muted dark:border-[#2a3a2e] p-3">
-                    <p class="text-[10px] uppercase tracking-widest font-bold text-text-muted">MCU</p>
-                    <p class="text-sm font-bold" x-text="selectedStation?.hardware?.mcu ?? '—'"></p>
-                </div>
-                <div class="rounded-xl border border-border-muted dark:border-[#2a3a2e] p-3">
-                    <p class="text-[10px] uppercase tracking-widest font-bold text-text-muted">Microphone</p>
-                    <p class="text-sm font-bold" x-text="selectedStation?.hardware?.mic ?? '—'"></p>
-                </div>
-                <div class="rounded-xl border border-border-muted dark:border-[#2a3a2e] p-3">
-                    <p class="text-[10px] uppercase tracking-widest font-bold text-text-muted">Temperature</p>
-                    <p class="text-sm font-bold"><span x-text="selectedStation?.telemetry?.temperature_c ?? '—'"></span>°C</p>
-                </div>
-            </div>
-
-            <div class="rounded-xl border border-border-muted dark:border-[#2a3a2e] p-4">
-                <div class="flex items-start justify-between gap-4">
-                    <div class="flex items-start gap-3 min-w-0">
-                        <div class="size-12 rounded-xl overflow-hidden border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-background-dark shrink-0">
-                            <img x-show="selectedStation?.ml?.species?.image_url" :src="selectedStation?.ml?.species?.image_url" alt="Bird" class="size-full object-cover" />
-                            <div x-show="!selectedStation?.ml?.species?.image_url" class="size-full flex items-center justify-center text-text-muted">
-                                <span class="material-symbols-outlined">pets</span>
-                            </div>
-                        </div>
-                        <div class="min-w-0">
-                        <p class="text-[10px] uppercase tracking-widest font-bold text-text-muted">Bird Identification (Edge AI)</p>
-                        <p class="text-sm font-black truncate" x-text="selectedStation?.ml?.species?.common_name ?? '—'"></p>
-                        <p class="text-[10px] text-text-muted" x-text="selectedStation?.ml?.species?.scientific_name ?? ''"></p>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-[10px] uppercase tracking-widest font-bold text-text-muted">Confidence</p>
-                        <p class="text-lg font-black"><span x-text="selectedStation?.ml?.confidence_pct ?? '—'"></span>%</p>
-                    </div>
-                </div>
-
-                <div class="mt-4 flex flex-wrap gap-2 items-center">
-                    <span
-                        class="px-2.5 py-1 rounded-full text-[10px] font-black"
-                        :class="(selectedStation?.ml?.status === 'Healthy') ? 'bg-primary/20 text-[#111813]' : 'bg-red-500/20 text-red-600'"
-                        x-text="selectedStation?.ml?.status ?? '—'"
-                    ></span>
-                    <span class="text-[10px] font-bold text-text-muted">Eco score:</span>
-                    <span class="text-[10px] font-black" x-text="selectedStation?.ml?.eco_score ?? '—'"></span>
-                    <span class="text-[10px] font-bold text-text-muted">Activity:</span>
-                    <span class="text-[10px] font-black"><span x-text="selectedStation?.ml?.activity_det_per_hr ?? '—'"></span> det/hr</span>
-                </div>
-
-                <div class="mt-4 rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-white/60 dark:bg-background-dark/40 p-3">
-                    <p class="text-[10px] uppercase tracking-widest font-bold text-text-muted">Why this status?</p>
-                    <ul class="mt-2 space-y-1">
-                        <template x-for="(line, idx) in stationConclusions(selectedStation)" :key="idx">
-                            <li class="text-xs text-text-muted"><span class="font-bold text-[#111813] dark:text-white" x-text="'• ' + line"></span></li>
-                        </template>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="flex items-center justify-between gap-3 rounded-xl bg-background-light dark:bg-white/5 border border-border-muted dark:border-[#2a3a2e] p-4">
-                <div class="text-xs text-text-muted">
-                    <p class="font-bold">Location</p>
-                    <p class="tabular-nums" x-text="selectedStation ? `${selectedStation.coordinates.lat}, ${selectedStation.coordinates.lng}` : ''"></p>
-                </div>
-                <a
-                    class="px-4 py-2 rounded-lg bg-[#111813] text-white text-xs font-black hover:bg-black transition-colors flex items-center gap-2"
-                    href="{{ route('live') }}"
-                >
-                    <span class="material-symbols-outlined text-sm">hearing</span>
-                    Listen
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
 </body>
 
 <script>
@@ -626,16 +632,25 @@
 
             openStation(station) {
                 this.selectedStation = station;
-                this.modalOpen = true;
-
+                // panel is inline — no overlay needed
+                // fly map to station if possible
                 if (this.map && station?.coordinates?.lat != null && station?.coordinates?.lng != null) {
                     this.map.flyTo([station.coordinates.lat, station.coordinates.lng], Math.max(this.map.getZoom(), 9), { duration: 0.6 });
                 }
+                // smooth scroll so panel is visible on small screens
+                this.$nextTick(() => {
+                    const el = this.$el.querySelector('[x-show="selectedStation"]');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                });
             },
 
-            closeModal() {
-                this.modalOpen = false;
+            closePanel() {
                 this.selectedStation = null;
+            },
+
+            /** @deprecated kept for backward compat with any old references */
+            closeModal() {
+                this.closePanel();
             },
 
             topSpeciesByArea() {
@@ -701,7 +716,7 @@
 
                         this.refreshLeafletMarkers(false);
 
-                        if (this.modalOpen && this.selectedStation?.id) {
+                        if (this.selectedStation?.id) {
                             const selectedId = this.stationId(this.selectedStation);
                             const updated = this.stations.find((s) => this.stationId(s) === selectedId);
                             if (updated) this.selectedStation = updated;
