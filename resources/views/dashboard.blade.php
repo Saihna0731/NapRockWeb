@@ -199,7 +199,6 @@
                                     <div class="min-w-0 flex-1">
                                         <p class="text-xs font-black truncate" x-text="item.commonName"></p>
                                         <p class="text-[10px] text-text-muted italic truncate" x-text="item.scientificName"></p>
-                                        <p class="text-[10px] text-text-muted truncate" x-text="item.stationLabel"></p>
                                     </div>
                                     <div class="flex items-center gap-2 shrink-0">
                                         <div class="text-right">
@@ -225,20 +224,9 @@
                                     style="display:none"
                                     class="px-4 pb-4 bg-background-light dark:bg-background-dark/30"
                                 >
-                                    {{-- Large image + scientific name --}}
-                                    <div class="flex gap-3 pt-3">
-                                        <div class="size-20 rounded-xl overflow-hidden border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-background-dark shrink-0">
-                                            <img x-show="item.imageUrl" :src="item.imageUrl" alt="" class="size-full object-cover"/>
-                                            <div x-show="!item.imageUrl" class="size-full flex items-center justify-center text-text-muted">
-                                                <span class="material-symbols-outlined text-3xl">flutter_dash</span>
-                                            </div>
-                                        </div>
-                                        <div class="min-w-0">
-                                            <p class="text-sm font-black" x-text="item.commonName"></p>
-                                            <p class="text-xs text-text-muted italic mt-0.5" x-text="item.scientificName"></p>
-                                            <p class="text-[10px] text-text-muted mt-1">Station: <span class="font-bold" x-text="item.stationLabel"></span></p>
-                                            <p class="text-[10px] text-text-muted">Coords: <span class="font-bold tabular-nums" x-text="item.station ? (item.station.coordinates?.lat + ', ' + item.station.coordinates?.lng) : '—'"></span></p>
-                                        </div>
+                                    {{-- Coords --}}
+                                    <div class="pt-3 pb-1">
+                                        <p class="text-[10px] text-text-muted">Station: <span class="font-bold" x-text="item.stationLabel"></span> &nbsp;·&nbsp; Coords: <span class="font-bold tabular-nums" x-text="item.station ? (item.station.coordinates?.lat + ', ' + item.station.coordinates?.lng) : '—'"></span></p>
                                     </div>
 
                                     {{-- Telemetry chips --}}
