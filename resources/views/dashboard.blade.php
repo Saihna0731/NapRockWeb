@@ -11,6 +11,7 @@
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjVgcTOOYInsw7RMVgG2LqpS6xO309B9o&callback=Function.prototype" async defer></script>
 </head>
 <body
     x-data="dashboardPage({{ \Illuminate\Support\Js::from($stations ?? []) }})"
@@ -135,7 +136,7 @@
             <div class="col-span-12 xl:col-span-7">
                 <div class="bg-white dark:bg-[#1a2e21] p-2 rounded-xl border border-border-muted dark:border-[#2a3a2e] relative z-0 overflow-hidden" style="height:520px">
                     <div class="w-full h-full rounded-lg relative overflow-hidden">
-                        <div x-ref="leafletMap" class="absolute inset-0"></div>
+                        <div x-ref="googleMap" class="absolute inset-0"></div>
                         <div class="absolute top-3 left-3 z-10 rounded-xl border border-border-muted dark:border-[#2a3a2e] bg-white/90 dark:bg-background-dark/80 backdrop-blur px-3 py-2">
                             <p class="text-[10px] font-black uppercase tracking-widest text-text-muted">MAP</p>
                             <p class="text-xs font-bold" x-text="`${visibleStations().length} station(s)`"></p>
@@ -569,7 +570,7 @@
 
             init() {
                 this.lastUpdatedAt = new Date();
-                this.$nextTick(() => this.initLeaflet());
+                this.$nextTick(() => this.initGoogleMap());
                 this.startPolling();
             },
 
@@ -592,7 +593,7 @@
 
             setZone(zone) {
                 this.zoneFilter = zone;
-                this.refreshLeafletMarkers(true);
+                this.refreshGoogleMarkers(true);
             },
 
             visibleStations() {
@@ -604,7 +605,8 @@
                 // panel is inline — no overlay needed
                 // fly map to station if possible
                 if (this.map && station?.coordinates?.lat != null && station?.coordinates?.lng != null) {
-                    this.map.flyTo([station.coordinates.lat, station.coordinates.lng], Math.max(this.map.getZoom(), 9), { duration: 0.6 });
+                    this.map.panTo({ lat: station.coordinates.lat, lng: station.coordinates.lng });
+                    if (this.map.getZoom() < 9) this.map.setZoom(9);
                 }
                 // smooth scroll so panel is visible on small screens
                 this.$nextTick(() => {
@@ -713,7 +715,7 @@
                         this.stations = await this.mergeWithFirebaseStations(stations);
                         this.lastUpdatedAt = new Date();
 
-                        this.refreshLeafletMarkers(false);
+                        this.refreshGoogleMarkers(false);
 
                         if (this.selectedStation?.id) {
                             const selectedId = this.stationId(this.selectedStation);
@@ -973,7 +975,7 @@
 
                     this.mockLatest = payload;
                     this.stations = await this.mergeWithFirebaseStations(this.stations);
-                    this.refreshLeafletMarkers(true);
+                    this.refreshGoogleMarkers(true);
                     this.firebaseStatus = 'connected';
                     this.firebaseMessage = `Saved mock data for ${payload.device_id}`;
                 } catch (error) {
@@ -1013,7 +1015,7 @@
                     if (this.mockLatest?.sound_db != null) this.mockSoundDb = Number(this.mockLatest.sound_db);
 
                     this.stations = await this.mergeWithFirebaseStations(this.stations);
-                    this.refreshLeafletMarkers(true);
+                    this.refreshGoogleMarkers(true);
                     this.firebaseStatus = 'connected';
                     this.firebaseMessage = `Loaded latest data for ${deviceId}`;
                 } catch (error) {
@@ -1024,66 +1026,89 @@
                 }
             },
 
-            initLeaflet() {
-                if (!window.L || !this.$refs.leafletMap) return;
+            initGoogleMap() {
+                if (!window.google?.maps || !this.$refs.googleMap) return;
                 if (this.map) return;
 
-                const L = window.L;
-                this.map = L.map(this.$refs.leafletMap, {
+                this.map = new google.maps.Map(this.$refs.googleMap, {
+                    zoom: 4,
+                    center: { lat: 0, lng: 0 },
+                    mapTypeId: 'terrain',
+                    mapTypeControl: true,
+                    streetViewControl: false,
+                    fullscreenControl: true,
                     zoomControl: true,
-                    attributionControl: true,
+                    styles: [
+                        { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+                        { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+                    ],
                 });
 
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '&copy; OpenStreetMap contributors',
-                }).addTo(this.map);
+                this.markerLayer = []; // array of google.maps markers
+                this._infoWindow = new google.maps.InfoWindow();
 
-                this.markerLayer = L.layerGroup().addTo(this.map);
-
-                this.refreshLeafletMarkers(true);
+                this.refreshGoogleMarkers(true);
             },
 
-            refreshLeafletMarkers(fit) {
-                if (!this.map || !this.markerLayer || !window.L) return;
-                const L = window.L;
+            refreshGoogleMarkers(fit) {
+                if (!this.map || !window.google?.maps) return;
 
-                this.markerLayer.clearLayers();
+                // clear old markers
+                if (Array.isArray(this.markerLayer)) {
+                    this.markerLayer.forEach(m => m.setMap(null));
+                }
+                this.markerLayer = [];
 
                 const visible = this.visibleStations();
-                const bounds = [];
+                const bounds = new google.maps.LatLngBounds();
+                let hasPoints = false;
 
                 visible.forEach((station, idx) => {
                     const lat = station?.coordinates?.lat;
                     const lng = station?.coordinates?.lng;
                     if (lat == null || lng == null) return;
 
+                    const pos = { lat, lng };
                     const isHealthy = station?.ml?.status === 'Healthy';
-                    const bg = isHealthy ? 'var(--color-primary)' : 'rgb(239 68 68)';
+                    const bg = isHealthy ? '#39e079' : '#ef4444';
 
-                    const icon = L.divIcon({
-                        className: '',
-                        html: `
-                            <div style="width:28px;height:28px;border-radius:9999px;display:flex;align-items:center;justify-content:center;border:2px solid white;background:${bg};box-shadow:0 10px 15px -3px rgba(0,0,0,.25);font-weight:800;color:white;font-size:11px;">
-                                ${idx + 1}
-                            </div>
-                        `,
-                        iconSize: [28, 28],
-                        iconAnchor: [14, 14],
+                    const marker = new google.maps.Marker({
+                        position: pos,
+                        map: this.map,
+                        icon: {
+                            url: `data:image/svg+xml,${encodeURIComponent(
+                                `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="14" fill="${bg}" stroke="white" stroke-width="2.5"/><text x="16" y="21" text-anchor="middle" font-size="12" font-weight="800" fill="white" font-family="sans-serif">${idx + 1}</text></svg>`
+                            )}`,
+                            scaledSize: new google.maps.Size(32, 32),
+                            anchor: new google.maps.Point(16, 16),
+                        },
+                        title: `${station.label ?? station.id}: ${station.id}`,
                     });
 
-                    const marker = L.marker([lat, lng], { icon });
-                    marker.on('click', () => this.openStation(station));
-                    marker.addTo(this.markerLayer);
-                    bounds.push([lat, lng]);
+                    marker.addListener('click', () => {
+                        this.openStation(station);
+                        this._infoWindow.setContent(
+                            `<div style="font-family:inherit;font-size:12px;font-weight:700;line-height:1.5;padding:2px 0;">`
+                            + `<div>${station.label ?? station.id}: ${station.id}</div>`
+                            + `<div style="font-weight:400;font-style:italic">${station?.ml?.species?.common_name ?? 'Unknown'}</div>`
+                            + `<div style="font-weight:400">${station?.ml?.confidence_pct ?? 0}% · ${station?.ml?.status ?? '—'}</div>`
+                            + `</div>`
+                        );
+                        this._infoWindow.open(this.map, marker);
+                    });
+
+                    this.markerLayer.push(marker);
+                    bounds.extend(pos);
+                    hasPoints = true;
                 });
 
-                if (fit && bounds.length) {
-                    this.map.fitBounds(bounds, { padding: [24, 24] });
+                if (fit && hasPoints) {
+                    this.map.fitBounds(bounds, { top: 24, right: 24, bottom: 24, left: 24 });
                 }
 
-                if (fit && !bounds.length) {
-                    this.map.setView([0, 0], 2);
+                if (fit && !hasPoints) {
+                    this.map.setCenter({ lat: 0, lng: 0 });
+                    this.map.setZoom(2);
                 }
             },
 

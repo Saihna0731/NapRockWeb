@@ -11,6 +11,7 @@
     <link crossorigin href="https://fonts.gstatic.com" rel="preconnect"/>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjVgcTOOYInsw7RMVgG2LqpS6xO309B9o&callback=Function.prototype" async defer></script>
 </head>
 <body
     x-data="gisPage()"
@@ -89,7 +90,7 @@
 
                 {{-- Map overlay: station count --}}
                 <div class="absolute top-3 left-3 z-10 rounded-xl border border-border-muted dark:border-[#2a3a2e] bg-white/90 dark:bg-background-dark/80 backdrop-blur px-3 py-2">
-                    <p class="text-[10px] font-black uppercase tracking-widest text-text-muted">Leaflet Map</p>
+                    <p class="text-[10px] font-black uppercase tracking-widest text-text-muted">Google Maps</p>
                     <p class="text-xs font-bold" x-text="`${visibleStations().length} station(s) shown`"></p>
                 </div>
 
@@ -268,7 +269,7 @@
             <span class="text-xs font-bold">Warning station</span>
         </div>
         <div class="flex items-center gap-2 ml-auto text-[10px] text-text-muted">
-            Map: © <a href="https://www.openstreetmap.org/copyright" class="hover:underline ml-1">OpenStreetMap</a>
+            Map: © <a href="https://www.google.com/maps" class="hover:underline ml-1">Google Maps</a>
         </div>
     </div>
 
@@ -317,7 +318,8 @@
             selectStation(station) {
                 this.selectedStation = station;
                 if (this.map && station?.coordinates?.lat != null && station?.coordinates?.lng != null) {
-                    this.map.flyTo([station.coordinates.lat, station.coordinates.lng], Math.max(this.map.getZoom(), 10), { duration: 0.7 });
+                    this.map.panTo({ lat: station.coordinates.lat, lng: station.coordinates.lng });
+                    if (this.map.getZoom() < 10) this.map.setZoom(10);
                 }
             },
 
@@ -370,28 +372,35 @@
             },
 
             initMap() {
-                if (!window.L || !this.$refs.gisMap) return;
+                if (!window.google?.maps || !this.$refs.gisMap) return;
                 if (this.map) return;
 
-                const L = window.L;
-                this.map = L.map(this.$refs.gisMap, { zoomControl: true, attributionControl: true });
-
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '&copy; OpenStreetMap contributors',
-                }).addTo(this.map);
-
-                this.markerLayer = L.layerGroup().addTo(this.map);
+                this.map = new google.maps.Map(this.$refs.gisMap, {
+                    zoom: 4,
+                    center: { lat: 0, lng: 0 },
+                    mapTypeId: 'terrain',
+                    mapTypeControl: true,
+                    streetViewControl: false,
+                    fullscreenControl: true,
+                    zoomControl: true,
+                    styles: [
+                        { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+                        { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+                    ],
+                });
+                this.markerLayer = [];
+                this._infoWindow = new google.maps.InfoWindow();
                 this.refreshMarkers(true);
             },
 
             refreshMarkers(fit) {
-                if (!this.map || !this.markerLayer || !window.L) return;
-                const L = window.L;
-                this.markerLayer.clearLayers();
+                if (!this.map) return;
+                this.markerLayer.forEach(m => m.setMap(null));
+                this.markerLayer = [];
 
                 const visible = this.visibleStations();
-                const bounds = [];
+                const bounds = new google.maps.LatLngBounds();
+                let hasPoints = false;
 
                 visible.forEach((station, idx) => {
                     const lat = station?.coordinates?.lat;
@@ -399,36 +408,40 @@
                     if (lat == null || lng == null) return;
 
                     const isHealthy = station?.ml?.status === 'Healthy';
-                    const bg = isHealthy ? 'var(--color-primary)' : 'rgb(239,68,68)';
+                    const bg = isHealthy ? '#39e079' : '#ef4444';
+                    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30"><circle cx="15" cy="15" r="14" fill="${bg}" stroke="white" stroke-width="2.5"/><text x="15" y="20" text-anchor="middle" fill="white" font-size="11" font-weight="800">${idx + 1}</text></svg>`;
+                    const iconUrl = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
 
-                    const icon = L.divIcon({
-                        className: '',
-                        html: `<div style="width:30px;height:30px;border-radius:9999px;display:flex;align-items:center;justify-content:center;border:2.5px solid white;background:${bg};box-shadow:0 4px 12px rgba(0,0,0,.3);font-weight:800;color:white;font-size:11px;cursor:pointer;">${idx + 1}</div>`,
-                        iconSize: [30, 30],
-                        iconAnchor: [15, 15],
+                    const marker = new google.maps.Marker({
+                        position: { lat, lng },
+                        map: this.map,
+                        icon: { url: iconUrl, scaledSize: new google.maps.Size(30, 30), anchor: new google.maps.Point(15, 15) },
+                        title: station.label ?? station.id,
                     });
 
-                    const marker = L.marker([lat, lng], { icon });
-                    marker.on('click', () => this.selectStation(station));
+                    marker.addListener('click', () => {
+                        this._infoWindow.setContent(
+                            `<div style="font-family:inherit;font-size:11px;font-weight:700;line-height:1.4;">
+                                <div>${station.label ?? station.id}: ${station.id}</div>
+                                <div style="font-weight:400;font-style:italic">${station?.ml?.species?.common_name ?? 'Unknown'}</div>
+                                <div style="font-weight:400">${station?.ml?.confidence_pct ?? 0}% · ${station?.ml?.status ?? '—'}</div>
+                            </div>`
+                        );
+                        this._infoWindow.open(this.map, marker);
+                        this.selectStation(station);
+                    });
 
-                    marker.bindTooltip(
-                        `<div style="font-family:inherit;font-size:11px;font-weight:700;line-height:1.4;">
-                            <div>${station.label ?? station.id}: ${station.id}</div>
-                            <div style="font-weight:400;font-style:italic">${station?.ml?.species?.common_name ?? 'Unknown'}</div>
-                            <div style="font-weight:400">${station?.ml?.confidence_pct ?? 0}% · ${station?.ml?.status ?? '—'}</div>
-                        </div>`,
-                        { direction: 'top', offset: [0, -16], className: 'est-tooltip' }
-                    );
-
-                    marker.addTo(this.markerLayer);
-                    bounds.push([lat, lng]);
+                    this.markerLayer.push(marker);
+                    bounds.extend({ lat, lng });
+                    hasPoints = true;
                 });
 
-                if (fit && bounds.length) {
-                    this.map.fitBounds(bounds, { padding: [32, 32] });
+                if (fit && hasPoints) {
+                    this.map.fitBounds(bounds, { top: 32, right: 32, bottom: 32, left: 32 });
                 }
-                if (fit && !bounds.length) {
-                    this.map.setView([0, 0], 2);
+                if (fit && !hasPoints) {
+                    this.map.setCenter({ lat: 0, lng: 0 });
+                    this.map.setZoom(2);
                 }
             },
 
@@ -458,15 +471,5 @@
     });
 </script>
 
-<style>
-.est-tooltip {
-    background: white !important;
-    border: 1px solid #e2e8e4 !important;
-    border-radius: 8px !important;
-    padding: 6px 10px !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,.12) !important;
-    font-family: inherit !important;
-}
-.est-tooltip::before { display: none !important; }
-</style>
+
 </html>
