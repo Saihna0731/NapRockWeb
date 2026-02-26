@@ -90,21 +90,39 @@
             </div>
         </div>
 
+        {{-- ══ Zone Tab Bar ══ --}}
         <div class="flex flex-wrap items-center justify-between gap-4">
-            <div class="flex items-center gap-2 rounded-xl border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-[#1a2e21] p-2">
-                <span class="text-[10px] font-black uppercase tracking-widest text-text-muted px-2">Area Type</span>
-                <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-black"
-                        :class="zoneFilter === 'all' ? 'bg-background-light dark:bg-background-dark/40' : 'hover:bg-background-light dark:hover:bg-background-dark/40'"
-                        @click="zoneFilter='all'">All</button>
-                <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-black"
-                        :class="zoneFilter === 'forest' ? 'bg-background-light dark:bg-background-dark/40' : 'hover:bg-background-light dark:hover:bg-background-dark/40'"
-                        @click="zoneFilter='forest'">Forest</button>
-                <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-black"
-                        :class="zoneFilter === 'jungle' ? 'bg-background-light dark:bg-background-dark/40' : 'hover:bg-background-light dark:hover:bg-background-dark/40'"
-                        @click="zoneFilter='jungle'">Jungle</button>
-                <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-black"
-                        :class="zoneFilter === 'dust' ? 'bg-background-light dark:bg-background-dark/40' : 'hover:bg-background-light dark:hover:bg-background-dark/40'"
-                        @click="zoneFilter='dust'">Dust</button>
+            <div class="flex items-center gap-1 bg-white dark:bg-[#1a2e21] rounded-xl border border-border-muted dark:border-[#2a3a2e] p-1.5 overflow-x-auto">
+                <button type="button"
+                    class="px-4 py-2 rounded-lg text-xs font-black transition-colors whitespace-nowrap"
+                    :class="zoneFilter === 'all' ? 'bg-[#111813] text-white dark:bg-primary dark:text-background-dark shadow' : 'text-text-muted hover:bg-background-light dark:hover:bg-background-dark/40'"
+                    @click="setZone('all')">
+                    All Zones
+                </button>
+                <button type="button"
+                    class="px-4 py-2 rounded-lg text-xs font-black transition-colors whitespace-nowrap"
+                    :class="zoneFilter === 'forest' ? 'bg-[#111813] text-white dark:bg-primary dark:text-background-dark shadow' : 'text-text-muted hover:bg-background-light dark:hover:bg-background-dark/40'"
+                    @click="setZone('forest')">
+                    <span class="inline-flex items-center gap-1.5"><span class="size-2 rounded-full bg-primary inline-block"></span>Zone 1 · Forest</span>
+                </button>
+                <button type="button"
+                    class="px-4 py-2 rounded-lg text-xs font-black transition-colors whitespace-nowrap"
+                    :class="zoneFilter === 'jungle' ? 'bg-[#111813] text-white dark:bg-primary dark:text-background-dark shadow' : 'text-text-muted hover:bg-background-light dark:hover:bg-background-dark/40'"
+                    @click="setZone('jungle')">
+                    <span class="inline-flex items-center gap-1.5"><span class="size-2 rounded-full bg-accent-blue inline-block"></span>Zone 2 · Jungle</span>
+                </button>
+                <button type="button"
+                    class="px-4 py-2 rounded-lg text-xs font-black transition-colors whitespace-nowrap"
+                    :class="zoneFilter === 'dust' ? 'bg-[#111813] text-white dark:bg-primary dark:text-background-dark shadow' : 'text-text-muted hover:bg-background-light dark:hover:bg-background-dark/40'"
+                    @click="setZone('dust')">
+                    <span class="inline-flex items-center gap-1.5"><span class="size-2 rounded-full bg-orange-400 inline-block"></span>Zone 3 · Dust</span>
+                </button>
+                <button type="button"
+                    class="px-4 py-2 rounded-lg text-xs font-black transition-colors whitespace-nowrap"
+                    :class="zoneFilter === 'wetland' ? 'bg-[#111813] text-white dark:bg-primary dark:text-background-dark shadow' : 'text-text-muted hover:bg-background-light dark:hover:bg-background-dark/40'"
+                    @click="setZone('wetland')">
+                    <span class="inline-flex items-center gap-1.5"><span class="size-2 rounded-full bg-cyan-400 inline-block"></span>Zone 4 · Wetland</span>
+                </button>
             </div>
             <div class="flex items-center gap-3">
                 <span class="text-xs text-text-muted font-bold">Live refresh:</span>
@@ -112,337 +130,193 @@
             </div>
         </div>
 
-        <section class="bg-white dark:bg-[#1a2e21] p-6 rounded-xl border border-border-muted dark:border-[#2a3a2e]">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                    <h3 class="text-sm font-black">Firebase Realtime Database Test</h3>
-                    <p class="text-xs text-text-muted">Mock ESP32 telemetry бичиж/уншаад холболтоо dashboard дээр шууд шалгана.</p>
-                </div>
-                <span class="px-2.5 py-1 rounded-full text-[10px] font-black"
-                      :class="firebaseStatus === 'connected' ? 'bg-primary/20 text-[#111813]' : (firebaseStatus === 'error' ? 'bg-red-500/20 text-red-600' : 'bg-background-light dark:bg-background-dark/40')"
-                      x-text="firebaseStatusLabel()"></span>
-            </div>
-
-            <div class="mt-4 grid grid-cols-1 md:grid-cols-5 gap-3">
-                <label class="flex flex-col gap-1 text-xs font-bold text-text-muted">
-                    Device ID
-                    <input type="text" x-model.trim="mockDeviceId" class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 px-3 py-2 text-sm font-semibold text-[#111813] dark:text-white focus:ring-0" placeholder="esp32-001" />
-                </label>
-                <label class="flex flex-col gap-1 text-xs font-bold text-text-muted">
-                    Sound (dB)
-                    <input type="number" x-model.number="mockSoundDb" class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 px-3 py-2 text-sm font-semibold text-[#111813] dark:text-white focus:ring-0" />
-                </label>
-                <label class="flex flex-col gap-1 text-xs font-bold text-text-muted">
-                    Temperature (°C)
-                    <input type="number" x-model.number="mockTemperatureC" class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 px-3 py-2 text-sm font-semibold text-[#111813] dark:text-white focus:ring-0" />
-                </label>
-                <label class="flex flex-col gap-1 text-xs font-bold text-text-muted">
-                    Latitude
-                    <input type="number" step="any" x-model.number="mockLatitude" class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 px-3 py-2 text-sm font-semibold text-[#111813] dark:text-white focus:ring-0" />
-                </label>
-                <label class="flex flex-col gap-1 text-xs font-bold text-text-muted">
-                    Longitude
-                    <input type="number" step="any" x-model.number="mockLongitude" class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 px-3 py-2 text-sm font-semibold text-[#111813] dark:text-white focus:ring-0" />
-                </label>
-            </div>
-
-            <div class="mt-4 flex flex-wrap gap-2">
-                <button type="button" class="px-4 py-2 rounded-lg bg-[#111813] text-white text-xs font-black hover:bg-black" @click="testFirebaseConnection()" :disabled="firebaseBusy">
-                    Test Connection
-                </button>
-                <button type="button" class="px-4 py-2 rounded-lg bg-primary text-[#111813] text-xs font-black hover:opacity-90" @click="saveMockEsp32()" :disabled="firebaseBusy">
-                    Save Mock ESP32
-                </button>
-                <button type="button" class="px-4 py-2 rounded-lg border border-border-muted dark:border-[#2a3a2e] text-xs font-black" @click="loadMockEsp32()" :disabled="firebaseBusy">
-                    Load Latest
-                </button>
-            </div>
-
-            <div class="mt-4 rounded-xl border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 p-3">
-                <p class="text-[10px] uppercase tracking-widest font-black text-text-muted">Result</p>
-                <p class="mt-2 text-xs font-semibold" x-text="firebaseMessage"></p>
-                <template x-if="mockLatest">
-                    <p class="mt-2 text-[11px] text-text-muted" x-text="`Latest => ${mockLatest.device_id} | ${mockLatest.sound_db} dB | ${mockLatest.temperature_c}°C | ${mockLatest.recorded_at}`"></p>
-                </template>
-            </div>
-        </section>
-
+        {{-- ══ Map + Species List ══ --}}
         <div class="grid grid-cols-12 gap-6">
             <div class="col-span-12 xl:col-span-7">
-                <div class="bg-white dark:bg-[#1a2e21] p-2 rounded-xl border border-border-muted dark:border-[#2a3a2e] h-160 relative z-0 overflow-hidden group">
+                <div class="bg-white dark:bg-[#1a2e21] p-2 rounded-xl border border-border-muted dark:border-[#2a3a2e] relative z-0 overflow-hidden" style="height:520px">
                     <div class="w-full h-full rounded-lg relative overflow-hidden">
                         <div x-ref="leafletMap" class="absolute inset-0"></div>
-                        <div class="absolute top-3 left-3 rounded-xl border border-border-muted dark:border-[#2a3a2e] bg-white/90 dark:bg-background-dark/80 backdrop-blur px-3 py-2">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-text-muted">Leaflet Map</p>
-                            <p class="text-xs font-bold" x-text="`${visibleStations().length} station(s) shown`"></p>
+                        <div class="absolute top-3 left-3 z-10 rounded-xl border border-border-muted dark:border-[#2a3a2e] bg-white/90 dark:bg-background-dark/80 backdrop-blur px-3 py-2">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-text-muted">MAP</p>
+                            <p class="text-xs font-bold" x-text="`${visibleStations().length} station(s)`"></p>
+                        </div>
+                        {{-- Zone badge --}}
+                        <div x-show="zoneFilter !== 'all'" class="absolute top-3 right-3 z-10 flex items-center gap-1.5 rounded-lg bg-[#111813]/80 text-white px-3 py-1.5 backdrop-blur">
+                            <span class="material-symbols-outlined text-sm">location_on</span>
+                            <span class="text-[10px] font-black uppercase" x-text="zoneFilter"></span>
+                        </div>
+                        {{-- Selected device badge --}}
+                        <div x-show="selectedStation" class="absolute bottom-3 left-3 z-10 flex items-center gap-2 rounded-xl border border-primary bg-white/95 dark:bg-background-dark/95 backdrop-blur px-3 py-2">
+                            <span class="size-2 rounded-full bg-primary animate-pulse"></span>
+                            <span class="text-xs font-black" x-text="selectedStation ? (selectedStation.label + ': ' + selectedStation.id) : ''"></span>
+                            <button type="button" class="ml-1 text-text-muted hover:text-[#111813] dark:hover:text-white" @click="closePanel()">
+                                <span class="material-symbols-outlined text-sm">close</span>
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-span-12 xl:col-span-5 space-y-6">
-
-                {{-- ══ Device Detail Side Panel (replaces centre modal) ══ --}}
-                <div
-                    x-show="selectedStation"
-                    x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="opacity-0 translate-y-2"
-                    x-transition:enter-end="opacity-100 translate-y-0"
-                    x-transition:leave="transition ease-in duration-150"
-                    x-transition:leave-start="opacity-100 translate-y-0"
-                    x-transition:leave-end="opacity-0 translate-y-2"
-                    style="display:none"
-                    class="bg-white dark:bg-[#1a2e21] rounded-xl border border-primary/40 shadow-lg overflow-hidden"
-                >
-                    {{-- Header --}}
-                    <div class="px-5 pt-4 pb-3 border-b border-border-muted dark:border-[#2a3a2e] flex items-start justify-between gap-3 bg-primary/5">
-                        <div class="min-w-0">
-                            <p class="text-[10px] uppercase tracking-[0.18em] font-bold text-accent-blue">Station Analytics</p>
-                            <h3 class="text-base font-black truncate leading-tight mt-0.5" x-text="selectedStation ? `${selectedStation.label}: ${selectedStation.id}` : ''"></h3>
-                            <p class="text-[11px] text-text-muted mt-0.5" x-text="selectedStation?.area ?? ''"></p>
+            {{-- ══ Species / Nearby Birds panel ══ --}}
+            <div class="col-span-12 xl:col-span-5">
+                <div class="bg-white dark:bg-[#1a2e21] rounded-xl border border-border-muted dark:border-[#2a3a2e] flex flex-col overflow-hidden" style="height:520px">
+                    {{-- Panel header --}}
+                    <div class="px-5 py-4 border-b border-border-muted dark:border-[#2a3a2e] flex items-center justify-between shrink-0">
+                        <div>
+                            <h3 class="text-sm font-black" x-text="selectedStation ? 'Nearby Birds' : 'Species'"></h3>
+                            <p class="text-[10px] text-text-muted mt-0.5"
+                               x-text="selectedStation ? ('Near · ' + (selectedStation.label ?? selectedStation.id)) : 'All visible stations'"></p>
                         </div>
-                        <button type="button"
-                            class="p-1.5 rounded-lg hover:bg-background-light dark:hover:bg-white/10 text-text-muted hover:text-[#111813] dark:hover:text-white transition-colors shrink-0"
-                            @click="closePanel()"
-                        >
-                            <span class="material-symbols-outlined text-base">close</span>
-                        </button>
+                        <a href="{{ route('live') }}"
+                           class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#111813] dark:bg-primary text-white dark:text-background-dark text-xs font-black hover:opacity-80 transition-opacity">
+                            <span class="relative flex size-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary dark:bg-background-dark opacity-75"></span>
+                                <span class="relative inline-flex rounded-full size-2 bg-primary dark:bg-background-dark"></span>
+                            </span>
+                            Live
+                        </a>
                     </div>
-
-                    <div class="p-4 space-y-4">
-                        {{-- Hardware chips --}}
-                        <div class="grid grid-cols-3 gap-2">
-                            <div class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 p-2.5">
-                                <p class="text-[9px] uppercase tracking-widest font-bold text-text-muted">MCU</p>
-                                <p class="text-xs font-bold mt-0.5" x-text="selectedStation?.hardware?.mcu ?? '—'"></p>
-                            </div>
-                            <div class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 p-2.5">
-                                <p class="text-[9px] uppercase tracking-widest font-bold text-text-muted">Mic</p>
-                                <p class="text-xs font-bold mt-0.5" x-text="selectedStation?.hardware?.mic ?? '—'"></p>
-                            </div>
-                            <div class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 p-2.5">
-                                <p class="text-[9px] uppercase tracking-widest font-bold text-text-muted">Temp</p>
-                                <p class="text-xs font-bold mt-0.5">
-                                    <span x-text="selectedStation?.telemetry?.temperature_c ?? '—'"></span>°C
-                                </p>
-                            </div>
-                        </div>
-
-                        {{-- Bird ID card --}}
-                        <div class="rounded-xl border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/30 p-3">
-                            <div class="flex items-start justify-between gap-3">
-                                <div class="flex items-start gap-3 min-w-0">
-                                    <div class="size-11 rounded-xl overflow-hidden border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-background-dark shrink-0">
-                                        <img x-show="selectedStation?.ml?.species?.image_url" :src="selectedStation?.ml?.species?.image_url" alt="Bird" class="size-full object-cover" />
-                                        <div x-show="!selectedStation?.ml?.species?.image_url" class="size-full flex items-center justify-center text-text-muted">
-                                            <span class="material-symbols-outlined text-sm">pets</span>
-                                        </div>
+                    {{-- Scrollable list --}}
+                    <div class="flex-1 overflow-y-auto divide-y divide-border-muted dark:divide-[#2a3a2e]">
+                        <template x-for="(item, idx) in speciesListItems()" :key="item.key">
+                            <button type="button"
+                                class="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-background-light dark:hover:bg-white/5 transition-colors"
+                                :class="selectedStation && item.station && stationId(item.station) === stationId(selectedStation) ? 'border-l-2 border-l-primary bg-primary/5' : 'border-l-2 border-l-transparent'"
+                                @click="item.station && openStation(item.station)"
+                            >
+                                <span class="text-xs font-black text-text-muted w-5 shrink-0 text-center" x-text="idx + 1"></span>
+                                <div class="size-10 rounded-lg overflow-hidden border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-background-dark shrink-0">
+                                    <img x-show="item.imageUrl" :src="item.imageUrl" alt="" class="size-full object-cover"/>
+                                    <div x-show="!item.imageUrl" class="size-full flex items-center justify-center text-text-muted">
+                                        <span class="material-symbols-outlined text-base">flutter_dash</span>
                                     </div>
-                                    <div class="min-w-0">
-                                        <p class="text-[9px] uppercase tracking-widest font-bold text-text-muted">Bird ID (Edge AI)</p>
-                                        <p class="text-sm font-black truncate leading-tight mt-0.5" x-text="selectedStation?.ml?.species?.common_name ?? '—'"></p>
-                                        <p class="text-[10px] text-text-muted italic" x-text="selectedStation?.ml?.species?.scientific_name ?? ''"></p>
-                                    </div>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-xs font-black truncate" x-text="item.commonName"></p>
+                                    <p class="text-[10px] text-text-muted italic truncate" x-text="item.scientificName"></p>
+                                    <p class="text-[10px] text-text-muted truncate" x-text="item.stationLabel"></p>
                                 </div>
                                 <div class="text-right shrink-0">
-                                    <p class="text-[9px] uppercase tracking-widest font-bold text-text-muted">Confidence</p>
-                                    <p class="text-lg font-black leading-tight"><span x-text="selectedStation?.ml?.confidence_pct ?? '—'"></span>%</p>
-                                </div>
-                            </div>
-
-                            <div class="mt-3 flex flex-wrap gap-1.5 items-center">
-                                <span
-                                    class="px-2.5 py-0.5 rounded-full text-[10px] font-black"
-                                    :class="(selectedStation?.ml?.status === 'Healthy') ? 'bg-primary/20 text-[#111813]' : 'bg-red-500/20 text-red-600'"
-                                    x-text="selectedStation?.ml?.status ?? '—'"
-                                ></span>
-                                <span class="text-[10px] text-text-muted font-bold">Eco score:</span>
-                                <span class="text-[10px] font-black" x-text="selectedStation?.ml?.eco_score ?? '—'"></span>
-                                <span class="text-[10px] text-text-muted font-bold">Activity:</span>
-                                <span class="text-[10px] font-black"><span x-text="selectedStation?.ml?.activity_det_per_hr ?? '—'"></span> det/hr</span>
-                            </div>
-
-                            {{-- Why this status --}}
-                            <div class="mt-3 rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-white/60 dark:bg-background-dark/40 p-3">
-                                <p class="text-[9px] uppercase tracking-widest font-bold text-text-muted">Why this status?</p>
-                                <ul class="mt-2 space-y-1">
-                                    <template x-for="(line, idx) in stationConclusions(selectedStation)" :key="idx">
-                                        <li class="text-xs font-medium text-text-muted">
-                                            <span class="font-bold text-[#111813] dark:text-white" x-text="'• ' + line"></span>
-                                        </li>
-                                    </template>
-                                </ul>
-                            </div>
-                        </div>
-
-                        {{-- Location + Listen --}}
-                        <div class="flex items-center justify-between gap-3 rounded-xl bg-background-light dark:bg-white/5 border border-border-muted dark:border-[#2a3a2e] px-4 py-3">
-                            <div>
-                                <p class="text-[10px] font-bold text-text-muted">Location</p>
-                                <p class="text-xs font-bold tabular-nums" x-text="selectedStation ? `${selectedStation.coordinates.lat}, ${selectedStation.coordinates.lng}` : ''"></p>
-                            </div>
-                            <a href="{{ route('live') }}"
-                               class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#111813] dark:bg-white text-white dark:text-[#111813] text-xs font-black hover:opacity-80 transition-opacity">
-                                <span class="material-symbols-outlined text-sm">hearing</span>
-                                Listen
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                {{-- ══ End Device Detail Side Panel ══ --}}
-
-                <div class="bg-white dark:bg-[#1a2e21] p-6 rounded-xl border border-border-muted dark:border-[#2a3a2e]">
-                    <div class="flex items-center justify-between gap-4 mb-6">
-                        <h3 class="text-xs font-bold text-text-muted uppercase tracking-wider">Top Species Detected</h3>
-                        <span class="text-[10px] font-black uppercase tracking-widest text-text-muted" x-text="zoneFilter === 'all' ? 'All Areas' : zoneFilter"></span>
-                    </div>
-
-                    <div class="space-y-3">
-                        <template x-for="area in topSpeciesByArea()" :key="area.key">
-                            <button type="button" class="w-full text-left p-4 rounded-xl border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 hover:border-primary transition-colors" @click="openStation(area.station)">
-                                <div class="flex items-start justify-between gap-3">
-                                    <div class="flex items-start gap-3 min-w-0">
-                                        <div class="size-10 rounded-xl overflow-hidden border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-background-dark shrink-0">
-                                            <img x-show="area.imageUrl" :src="area.imageUrl" alt="Bird" class="size-full object-cover" />
-                                            <div x-show="!area.imageUrl" class="size-full flex items-center justify-center text-text-muted">
-                                                <span class="material-symbols-outlined text-base">pets</span>
-                                            </div>
-                                        </div>
-                                        <div class="min-w-0">
-                                        <p class="text-[10px] font-black uppercase tracking-widest text-text-muted" x-text="area.label"></p>
-                                        <p class="text-sm font-black truncate" x-text="area.speciesName"></p>
-                                        <p class="text-[10px] text-text-muted truncate" x-text="area.speciesScientific"></p>
-                                        </div>
-                                    </div>
-                                    <div class="text-right shrink-0">
-                                        <p class="text-[10px] font-black uppercase tracking-widest text-text-muted">Confidence</p>
-                                        <p class="text-sm font-black" x-text="area.confidence"></p>
-                                    </div>
-                                </div>
-                                <div class="mt-3 flex flex-wrap items-center gap-2">
-                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black"
-                                          :class="area.status === 'Healthy' ? 'bg-primary/20 text-[#111813]' : 'bg-red-500/20 text-red-600'"
-                                          x-text="area.status"></span>
-                                    <span class="text-[10px] font-bold text-text-muted">Type:</span>
-                                    <span class="text-[10px] font-black" x-text="area.zone"></span>
-                                    <span class="text-[10px] font-bold text-text-muted">Temp:</span>
-                                    <span class="text-[10px] font-black" x-text="area.temperature"></span>
-                                    <span class="text-[10px] font-bold text-text-muted">Audio:</span>
-                                    <span class="text-[10px] font-black" x-text="area.soundDb"></span>
+                                    <span class="block px-2 py-0.5 rounded-full text-[10px] font-black mb-1"
+                                          :class="item.status === 'Healthy' ? 'bg-primary/20 text-[#111813]' : 'bg-red-500/20 text-red-600'"
+                                          x-text="item.status"></span>
+                                    <span class="text-[10px] font-black tabular-nums" x-text="item.confidence + '%'"></span>
                                 </div>
                             </button>
                         </template>
-
-                        <div x-show="topSpeciesByArea().length === 0" class="p-4 rounded-xl border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40">
-                            <p class="text-xs font-bold">No stations in this area type.</p>
-                            <p class="text-[10px] text-text-muted">Switch filter to view other zones.</p>
+                        <div x-show="speciesListItems().length === 0" class="flex flex-col items-center justify-center h-full p-8 text-center">
+                            <span class="material-symbols-outlined text-4xl text-text-muted mb-3">flutter_dash</span>
+                            <p class="text-sm font-bold">No species data</p>
+                            <p class="text-[10px] text-text-muted mt-1">Select a zone or device on the map</p>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <div x-show="selectedStation" x-transition.opacity class="bg-white dark:bg-[#1a2e21] p-6 rounded-xl border border-border-muted dark:border-[#2a3a2e]">
-                    <div class="flex items-start justify-between gap-4">
-                        <div>
-                            <h3 class="text-xs font-bold text-text-muted uppercase tracking-wider">Selected Area Summary</h3>
-                            <p class="text-lg font-black mt-1" x-text="selectedStation?.area_label ?? '—'"></p>
-                            <p class="text-xs text-text-muted" x-text="selectedStation?.area ?? ''"></p>
-                        </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black"
-                                  :class="(selectedStation?.ml?.status === 'Healthy') ? 'bg-primary/20 text-[#111813]' : 'bg-red-500/20 text-red-600'"
-                                  x-text="selectedStation?.ml?.status ?? '—'"></span>
-                        </div>
+        {{-- ══ Wave chart + Eco Donut (when ESP selected) ══ --}}
+        <div
+            x-show="selectedStation"
+            x-transition:enter="transition ease-out duration-250"
+            x-transition:enter-start="opacity-0 -translate-y-2"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 -translate-y-2"
+            style="display:none"
+            class="grid grid-cols-12 gap-6"
+        >
+            {{-- Wave chart (col 8) --}}
+            <div class="col-span-12 xl:col-span-8 bg-white dark:bg-[#1a2e21] rounded-xl border border-border-muted dark:border-[#2a3a2e] p-6">
+                <div class="flex items-start justify-between gap-4 mb-4">
+                    <div>
+                        <p class="text-[10px] uppercase tracking-widest font-bold text-text-muted">Audio Wave · Since Select</p>
+                        <p class="text-sm font-black mt-0.5" x-text="selectedStation ? (selectedStation.label + ': ' + selectedStation.id) : '—'"></p>
                     </div>
-
-                    <div class="mt-5">
-                        <p class="text-[10px] font-black uppercase tracking-widest text-text-muted">Birds in this Area</p>
-                        <div class="mt-3 flex flex-wrap gap-3">
-                            <template x-for="bird in areaBirds()" :key="bird.key">
-                                <div class="flex items-center gap-2 rounded-xl border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 px-3 py-2">
-                                    <div class="size-9 rounded-lg overflow-hidden border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-background-dark">
-                                        <img x-show="bird.imageUrl" :src="bird.imageUrl" alt="Bird" class="size-full object-cover" />
-                                        <div x-show="!bird.imageUrl" class="size-full flex items-center justify-center text-text-muted">
-                                            <span class="material-symbols-outlined text-sm">pets</span>
-                                        </div>
-                                    </div>
-                                    <div class="min-w-0">
-                                        <p class="text-xs font-black truncate" x-text="bird.commonName"></p>
-                                        <p class="text-[10px] text-text-muted truncate" x-text="bird.scientificName"></p>
-                                    </div>
-                                </div>
-                            </template>
+                    <div class="flex items-center gap-4">
+                        <div class="text-right">
+                            <p class="text-[9px] text-text-muted font-bold uppercase">Sound</p>
+                            <p class="text-sm font-black"><span x-text="selectedStation?.telemetry?.sound_db ?? '—'"></span> dB</p>
                         </div>
-                    </div>
-
-                    <div class="mt-5 grid grid-cols-2 gap-3">
-                        <div class="rounded-xl border border-border-muted dark:border-[#2a3a2e] p-3">
-                            <p class="text-[10px] uppercase tracking-widest font-bold text-text-muted">Most Active Hour</p>
-                            <p class="text-sm font-black" x-text="areaMostActiveHourLabel()"></p>
-                            <p class="text-[10px] text-text-muted">(demo: derived from latest recorded_at)</p>
-                        </div>
-                        <div class="rounded-xl border border-border-muted dark:border-[#2a3a2e] p-3">
-                            <p class="text-[10px] uppercase tracking-widest font-bold text-text-muted">Change vs Normal</p>
-                            <p class="text-sm font-black" x-text="areaDeltaLabel()"></p>
-                            <p class="text-[10px] text-text-muted">sound/temp/activity delta</p>
-                        </div>
-                    </div>
-
-                    <div class="mt-5 rounded-xl border border-border-muted dark:border-[#2a3a2e] p-4">
-                        <p class="text-[10px] uppercase tracking-widest font-bold text-text-muted">Detailed Conclusion</p>
-                        <ul class="mt-3 space-y-2">
-                            <template x-for="(line, idx) in areaConclusions()" :key="idx">
-                                <li class="text-xs font-medium flex gap-2">
-                                    <span class="material-symbols-outlined text-primary text-sm mt-0.5">check_circle</span>
-                                    <span x-text="line"></span>
-                                </li>
-                            </template>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="bg-white dark:bg-[#1a2e21] p-6 rounded-xl border border-border-muted dark:border-[#2a3a2e] flex flex-col items-center">
-                    <h3 class="text-xs font-bold text-text-muted uppercase tracking-wider mb-6 self-start">Eco-Health Index Score</h3>
-                    <div class="relative size-40">
-                        <div class="rounded-full size-full p-4 bg-[conic-gradient(from_180deg_at_50%_50%,var(--color-primary)_0%,var(--color-primary)_88%,var(--color-border-muted)_88%,var(--color-border-muted)_100%)]">
-                            <div class="bg-white dark:bg-[#1a2e21] rounded-full size-full flex flex-col items-center justify-center">
-                                <span class="text-4xl font-black">88</span>
-                                <span class="text-[10px] font-bold text-primary uppercase">Optimal</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 w-full mt-6 gap-4 border-t border-border-muted dark:border-[#2a3a2e] pt-6">
-                        <div class="text-center">
-                            <p class="text-[10px] text-text-muted uppercase font-bold">Varieties</p>
-                            <p class="text-xl font-bold">24</p>
-                        </div>
-                        <div class="text-center border-l border-border-muted dark:border-[#2a3a2e]">
-                            <p class="text-[10px] text-text-muted uppercase font-bold">Signals/hr</p>
-                            <p class="text-xl font-bold">1.2k</p>
+                        <div class="text-right">
+                            <p class="text-[9px] text-text-muted font-bold uppercase">Freq</p>
+                            <p class="text-sm font-black" x-text="selectedStation?.telemetry?.dominant_hz ? (selectedStation.telemetry.dominant_hz + ' Hz') : '—'"></p>
                         </div>
                     </div>
                 </div>
-
-                <div class="bg-white dark:bg-[#1a2e21] rounded-xl border border-border-muted dark:border-[#2a3a2e] overflow-hidden">
-                    <div class="p-4 border-b border-border-muted dark:border-[#2a3a2e] flex items-center justify-between bg-gray-50 dark:bg-white/5">
-                        <h3 class="font-bold text-sm">Live Signals</h3>
-                        <span class="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full">3 Alert</span>
+                {{-- SVG waveform --}}
+                <div class="relative h-28 w-full overflow-hidden">
+                    <svg class="w-full h-full" viewBox="0 0 800 100" preserveAspectRatio="none">
+                        <defs>
+                            <linearGradient id="waveGrad" x1="0" y1="0" x2="1" y2="0">
+                                <stop offset="0%" stop-color="var(--color-primary)" stop-opacity="0.2"/>
+                                <stop offset="50%" stop-color="var(--color-primary)" stop-opacity="1"/>
+                                <stop offset="100%" stop-color="var(--color-primary)" stop-opacity="0.2"/>
+                            </linearGradient>
+                        </defs>
+                        <line x1="0" y1="50" x2="800" y2="50" stroke="currentColor" stroke-opacity="0.1" stroke-width="1"/>
+                        <line x1="0" y1="20" x2="800" y2="20" stroke="currentColor" stroke-opacity="0.06" stroke-width="1" stroke-dasharray="4,6"/>
+                        <line x1="0" y1="80" x2="800" y2="80" stroke="currentColor" stroke-opacity="0.06" stroke-width="1" stroke-dasharray="4,6"/>
+                        <path fill="none" stroke="url(#waveGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            d="M0,50 C15,50 18,18 35,18 C52,18 55,82 75,82 C95,82 98,32 115,32 C132,32 135,68 155,68 C175,68 178,22 195,22 C212,22 215,78 235,78 C255,78 258,38 275,38 C292,38 295,62 315,62 C335,62 338,26 355,26 C372,26 375,74 395,74 C415,74 418,42 435,42 C452,42 455,58 475,58 C495,58 498,24 515,24 C532,24 535,76 555,76 C575,76 578,40 595,40 C612,40 615,60 635,60 C655,60 658,30 675,30 C692,30 695,70 715,70 C735,70 738,48 755,48 C770,48 778,50 800,50"
+                        />
+                        <circle cx="800" cy="50" r="4" fill="var(--color-primary)"/>
+                    </svg>
+                </div>
+                <div class="mt-2 flex justify-between text-[9px] font-bold text-text-muted px-1">
+                    <span>−30s</span>
+                    <span>−20s</span>
+                    <span>−10s</span>
+                    <span>Now</span>
+                </div>
+                {{-- Hardware info row --}}
+                <div class="mt-4 grid grid-cols-3 gap-2 border-t border-border-muted dark:border-[#2a3a2e] pt-4">
+                    <div class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 p-2.5">
+                        <p class="text-[9px] uppercase tracking-widest font-bold text-text-muted">MCU</p>
+                        <p class="text-xs font-bold mt-0.5" x-text="selectedStation?.hardware?.mcu ?? '—'"></p>
                     </div>
-                    <div class="divide-y divide-border-muted dark:divide-[#2a3a2e]">
-                        <div class="p-4 flex gap-3 hover:bg-background-light dark:hover:bg-white/5 cursor-pointer">
-                            <span class="material-symbols-outlined text-red-500">warning</span>
-                            <div>
-                                <p class="text-xs font-bold">Signal Drop - AMZ-042</p>
-                                <p class="text-[10px] text-text-muted">2m ago</p>
-                            </div>
-                        </div>
-                        <div class="p-4 flex gap-3 hover:bg-background-light dark:hover:bg-white/5 cursor-pointer">
-                            <span class="material-symbols-outlined text-orange-500">sensors</span>
-                            <div>
-                                <p class="text-xs font-bold">Migration Pattern Shift</p>
-                                <p class="text-[10px] text-text-muted">14m ago</p>
-                            </div>
+                    <div class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 p-2.5">
+                        <p class="text-[9px] uppercase tracking-widest font-bold text-text-muted">Mic</p>
+                        <p class="text-xs font-bold mt-0.5" x-text="selectedStation?.hardware?.mic ?? '—'"></p>
+                    </div>
+                    <div class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 p-2.5">
+                        <p class="text-[9px] uppercase tracking-widest font-bold text-text-muted">Temp</p>
+                        <p class="text-xs font-bold mt-0.5"><span x-text="selectedStation?.telemetry?.temperature_c ?? '—'"></span>°C</p>
+                    </div>
+                </div>
+            </div>
+            {{-- Eco-Health Donut (col 4) --}}
+            <div class="col-span-12 xl:col-span-4 bg-white dark:bg-[#1a2e21] rounded-xl border border-border-muted dark:border-[#2a3a2e] p-6 flex flex-col items-center justify-center">
+                <p class="text-[10px] font-black text-text-muted uppercase tracking-widest mb-5 self-start">Eco-Health Score</p>
+                <div class="relative size-36">
+                    <div class="rounded-full size-full p-3.5"
+                         :style="`background: conic-gradient(from 180deg at 50% 50%, var(--color-primary) 0%, var(--color-primary) ${((selectedStation?.ml?.eco_score ?? 0) / 100 * 100).toFixed(1)}%, var(--color-border-muted) ${((selectedStation?.ml?.eco_score ?? 0) / 100 * 100).toFixed(1)}%, var(--color-border-muted) 100%)`"
+                    >
+                        <div class="bg-white dark:bg-[#1a2e21] rounded-full size-full flex flex-col items-center justify-center">
+                            <span class="text-3xl font-black" x-text="selectedStation?.ml?.eco_score ?? '—'"></span>
+                            <span class="text-[9px] font-black text-primary uppercase">Score</span>
                         </div>
                     </div>
+                </div>
+                <div class="grid grid-cols-2 w-full mt-5 gap-3 border-t border-border-muted dark:border-[#2a3a2e] pt-5">
+                    <div class="text-center">
+                        <p class="text-[9px] text-text-muted uppercase font-bold">Activity</p>
+                        <p class="text-base font-black"><span x-text="selectedStation?.ml?.activity_det_per_hr ?? '—'"></span>/hr</p>
+                    </div>
+                    <div class="text-center border-l border-border-muted dark:border-[#2a3a2e]">
+                        <p class="text-[9px] text-text-muted uppercase font-bold">Status</p>
+                        <p class="text-xs font-black mt-1"
+                           :class="(selectedStation?.ml?.status === 'Healthy') ? 'text-primary' : 'text-red-500'"
+                           x-text="selectedStation?.ml?.status ?? '—'"></p>
+                    </div>
+                </div>
+                <div class="w-full mt-4 border-t border-border-muted dark:border-[#2a3a2e] pt-4">
+                    <p class="text-[9px] text-text-muted font-bold uppercase tracking-widest mb-2">Location</p>
+                    <p class="text-xs font-black tabular-nums" x-text="selectedStation ? (selectedStation.coordinates.lat + ', ' + selectedStation.coordinates.lng) : '—'"></p>
+                    <a href="{{ route('live') }}" class="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#111813] dark:bg-white text-white dark:text-[#111813] text-xs font-black hover:opacity-80 transition-opacity">
+                        <span class="material-symbols-outlined text-sm">hearing</span>
+                        Listen Live
+                    </a>
                 </div>
             </div>
         </div>
@@ -711,6 +585,36 @@
                 }
 
                 return Array.from(grouped.values()).sort((a, b) => a.label.localeCompare(b.label));
+            },
+
+            speciesListItems() {
+                if (this.selectedStation) {
+                    // Show all stations in same area as selected device
+                    const areaStns = this.areaStations();
+                    if (areaStns.length) {
+                        return areaStns.map((st) => ({
+                            key: this.stationId(st) || String(Math.random()),
+                            station: st,
+                            commonName: st?.ml?.species?.common_name || 'Unknown species',
+                            scientificName: st?.ml?.species?.scientific_name || '',
+                            imageUrl: st?.ml?.species?.image_url || '',
+                            status: st?.ml?.status || '—',
+                            confidence: Math.round(st?.ml?.confidence_pct ?? 0),
+                            stationLabel: st?.label || st?.id || '',
+                        }));
+                    }
+                }
+                // Default: top species per area from all visible stations
+                return this.topSpeciesByArea().map((area) => ({
+                    key: area.key,
+                    station: area.station,
+                    commonName: area.speciesName,
+                    scientificName: area.speciesScientific,
+                    imageUrl: area.imageUrl,
+                    status: area.status,
+                    confidence: Math.round(area.confidenceValue ?? 0),
+                    stationLabel: area.label,
+                }));
             },
 
             startPolling() {
