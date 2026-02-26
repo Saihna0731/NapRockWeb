@@ -447,11 +447,26 @@
             </div>
         </div>
 
-        <div class="bg-white dark:bg-[#1a2e21] p-8 rounded-xl border border-border-muted dark:border-[#2a3a2e]">
+        <div
+            x-show="selectedStation"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 -translate-y-3"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 -translate-y-3"
+            style="display:none"
+            class="bg-white dark:bg-[#1a2e21] p-8 rounded-xl border border-border-muted dark:border-[#2a3a2e]"
+        >
             <div class="flex flex-wrap justify-between items-center mb-8 gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold">6-Month Historical Trends</h2>
-                    <p class="text-text-muted text-sm font-medium">Tracking ecosystem translation data over the last half year</p>
+                    <div class="flex items-center gap-3 mb-1">
+                        <h2 class="text-2xl font-bold">Area Trends</h2>
+                        <span class="px-2.5 py-0.5 rounded-full bg-primary/10 text-[10px] font-black uppercase tracking-wider" x-text="selectedStation?.area_label ?? selectedStation?.label ?? ''"></span>
+                    </div>
+                    <p class="text-text-muted text-sm font-medium">
+                        <span x-text="selectedStation ? `${selectedStation.area ?? 'Selected station'} — ` : ''"></span>Detected activity &amp; eco score over last 6 months
+                    </p>
                 </div>
                 <div class="flex items-center gap-6">
                     <div class="flex items-center gap-4">
@@ -518,16 +533,28 @@
 
             <div class="mt-16 pt-8 border-t border-border-muted dark:border-[#2a3a2e] grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="p-5 rounded-xl bg-background-light dark:bg-background-dark/30 border border-border-muted dark:border-white/5">
-                    <h4 class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2">Translation Insight</h4>
-                    <p class="text-sm font-medium">Acoustic translations indicate 12% rise in canopy-level interactions during peak dawn hours.</p>
+                    <h4 class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2">Station Insight</h4>
+                    <p class="text-sm font-medium">
+                        <span x-text="selectedStation?.ml?.species?.common_name ?? 'Species'"></span> detected with
+                        <span x-text="(selectedStation?.ml?.confidence_pct ?? '—') + '%'"></span> confidence.
+                        Acoustic analysis indicates stable canopy-level interactions near this sensor.
+                    </p>
                 </div>
                 <div class="p-5 rounded-xl bg-background-light dark:bg-background-dark/30 border border-border-muted dark:border-white/5">
-                    <h4 class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2">Stability Report</h4>
-                    <p class="text-sm font-medium">Eco-health metrics maintained 88% stability despite heavy seasonal rainfall events.</p>
+                    <h4 class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2">Environment</h4>
+                    <p class="text-sm font-medium">
+                        Temperature: <span x-text="(selectedStation?.telemetry?.temperature_c ?? '—') + '°C'"></span>,
+                        Sound: <span x-text="(selectedStation?.telemetry?.sound_db ?? '—') + ' dB'"></span>.
+                        <span x-text="selectedStation?.zone ? 'Zone type: ' + selectedStation.zone + '.' : ''"></span>
+                    </p>
                 </div>
                 <div class="p-5 rounded-xl bg-background-light dark:bg-background-dark/30 border border-border-muted dark:border-white/5">
-                    <h4 class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2">Migration Hubs</h4>
-                    <p class="text-sm font-medium">North Sector 4 identified as primary migratory corridor for 18 specific species.</p>
+                    <h4 class="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2">Activity</h4>
+                    <p class="text-sm font-medium">
+                        <span x-text="(selectedStation?.ml?.activity_det_per_hr ?? '—') + ' detections/hr'"></span> recorded.
+                        Eco score: <span x-text="selectedStation?.ml?.eco_score ?? '—'"></span>.
+                        Status: <span x-text="selectedStation?.ml?.status ?? '—'"></span>.
+                    </p>
                 </div>
             </div>
         </div>
