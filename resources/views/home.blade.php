@@ -253,9 +253,9 @@
                     <h2 class="text-3xl font-bold">Monitored Species</h2>
                     <p class="text-gray-600 dark:text-gray-400">Current bioacoustic profiles loaded into Edge AI.</p>
                 </div>
-                <button class="text-primary font-bold flex items-center gap-2 hover:underline" type="button">
+                <a href="{{ route('species-id') }}" class="text-primary font-bold flex items-center gap-2 hover:underline">
                     View All Map Data <span class="material-symbols-outlined">arrow_right_alt</span>
-                </button>
+                </a>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 <div class="group bg-white dark:bg-[#1a2e20] rounded-2xl overflow-hidden border border-[#dbe6df] dark:border-[#2a3d31] hover:shadow-xl transition-all">
