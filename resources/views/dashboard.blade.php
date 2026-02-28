@@ -137,7 +137,7 @@
                 <div class="bg-white dark:bg-[#1a2e21] p-2 rounded-xl border border-border-muted dark:border-[#2a3a2e] relative z-0 overflow-hidden" style="height:520px">
                     <div class="w-full h-full rounded-lg relative overflow-hidden">
                         <div x-ref="googleMap" class="absolute inset-0"></div>
-                        <div class="absolute top-3 left-3 z-10 rounded-xl border border-border-muted dark:border-[#2a3a2e] bg-white/90 dark:bg-background-dark/80 backdrop-blur px-3 py-2">
+                        <div class="absolute top-14 left-3 z-10 rounded-xl border border-border-muted dark:border-[#2a3a2e] bg-white/90 dark:bg-background-dark/80 backdrop-blur px-3 py-2">
                             <p class="text-[10px] font-black uppercase tracking-widest text-text-muted">MAP</p>
                             <p class="text-xs font-bold" x-text="`${visibleStations().length} station(s)`"></p>
                         </div>
@@ -318,6 +318,10 @@
                         <div class="text-right">
                             <p class="text-[9px] text-text-muted font-bold uppercase">Freq</p>
                             <p class="text-sm font-black" x-text="selectedStation?.telemetry?.dominant_hz ? (selectedStation.telemetry.dominant_hz + ' Hz') : '—'"></p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[9px] text-text-muted font-bold uppercase">Updated</p>
+                            <p class="text-sm font-black" x-text="formatIsoTime(selectedStation?.telemetry?.recorded_at)"></p>
                         </div>
                     </div>
                 </div>
@@ -568,10 +572,27 @@
             mockLongitude: -62.02,
             mockLatest: null,
 
+            realtimeListenerDeviceId: null,
+            realtimeListenerStartedAt: null,
+            realtimeSubscriptions: [],
+            realtimePathSamples: {},
+            realtimePathUsed: null,
+            realtimeLastSuccessIso: null,
+            realtimeReconnectCount: 0,
+            realtimeErrorCount: 0,
+            realtimeTelemetryHeartbeatAt: 0,
+            latestRealtimeByDevice: {},
+            realtimeSamplesByDevice: {},
+
             init() {
                 this.lastUpdatedAt = new Date();
                 this.$nextTick(() => this.initGoogleMap());
                 this.startPolling();
+                this.$watch('selectedStation', () => this.syncRealtimeAudioListener());
+
+                window.addEventListener('beforeunload', () => {
+                    this.clearRealtimeAudioSubscriptions();
+                });
             },
 
             firebaseStatusLabel() {
@@ -584,6 +605,365 @@
             get lastUpdatedLabel() {
                 if (!this.lastUpdatedAt) return '—';
                 return this.lastUpdatedAt.toLocaleTimeString();
+            },
+
+            formatIsoTime(iso) {
+                if (!iso) return '—';
+                const d = new Date(iso);
+                if (Number.isNaN(d.getTime())) return '—';
+                return d.toLocaleTimeString();
+            },
+
+            toFiniteNumber(value) {
+                const n = Number(value);
+                return Number.isFinite(n) ? n : null;
+            },
+
+            clamp(value, min, max) {
+                if (!Number.isFinite(value)) return value;
+                return Math.min(max, Math.max(min, value));
+            },
+
+            priorityRealtimePaths(deviceId) {
+                return [
+                    `esp32_mock/${deviceId}/realtime_audio/latest`,
+                    `devices/${deviceId}/realtime_audio/latest`,
+                    `devices/${deviceId}/latest`,
+                ];
+            },
+
+            logFirebaseListenerTelemetry(event, extra = {}) {
+                const payload = {
+                    event,
+                    device_id: this.realtimeListenerDeviceId,
+                    path: this.realtimePathUsed,
+                    last_success_at: this.realtimeLastSuccessIso,
+                    listener_started_at: this.realtimeListenerStartedAt,
+                    reconnect_count: this.realtimeReconnectCount,
+                    error_count: this.realtimeErrorCount,
+                    source: 'dashboard-web',
+                    ...extra,
+                };
+
+                fetch('/api/firebase/listener-telemetry', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                }).catch(() => {
+                    // best-effort only
+                });
+            },
+
+            clearRealtimeAudioSubscriptions() {
+                const handles = this.getFirebaseHandles();
+                for (const sub of this.realtimeSubscriptions) {
+                    try {
+                        if (handles?.off) {
+                            handles.off(sub.ref, 'value', sub.onData);
+                        }
+                    } catch (e) {
+                        // ignore cleanup errors
+                    }
+                }
+                this.realtimeSubscriptions = [];
+                this.realtimePathSamples = {};
+                this.realtimePathUsed = null;
+            },
+
+            syncRealtimeAudioListener() {
+                const handles = this.getFirebaseHandles();
+                const deviceId = this.stationId(this.selectedStation);
+
+                if (!deviceId || !handles?.onValue) {
+                    this.clearRealtimeAudioSubscriptions();
+                    this.realtimeListenerDeviceId = null;
+                    return;
+                }
+
+                if (this.realtimeListenerDeviceId === deviceId && this.realtimeSubscriptions.length) {
+                    return;
+                }
+
+                if (this.realtimeListenerDeviceId && this.realtimeListenerDeviceId !== deviceId) {
+                    this.realtimeReconnectCount += 1;
+                    this.logFirebaseListenerTelemetry('listener_reconnect', {
+                        message: `Device switched to ${deviceId}`,
+                    });
+                }
+
+                this.clearRealtimeAudioSubscriptions();
+                this.realtimeListenerDeviceId = deviceId;
+                this.realtimeListenerStartedAt = new Date().toISOString();
+
+                for (const path of this.priorityRealtimePaths(deviceId)) {
+                    const audioRef = handles.ref(handles.db, path);
+                    const onData = (snapshot) => {
+                        if (!snapshot.exists()) {
+                            this.realtimePathSamples[path] = null;
+                            this.applyBestRealtimeSample(deviceId);
+                            return;
+                        }
+
+                        const parsed = this.parseRealtimeAudioSample(snapshot.val(), deviceId);
+                        this.realtimePathSamples[path] = parsed;
+                        this.applyBestRealtimeSample(deviceId);
+                    };
+
+                    const onError = (error) => {
+                        this.realtimeErrorCount += 1;
+                        this.realtimeReconnectCount += 1;
+                        this.logFirebaseListenerTelemetry('listener_error', {
+                            path,
+                            message: String(error?.message || 'Unknown firebase listener error'),
+                        });
+
+                        this.logFirebaseListenerTelemetry('listener_reconnect', {
+                            path,
+                            message: 'Resubscribing after listener error',
+                        });
+
+                        setTimeout(() => {
+                            if (this.realtimeListenerDeviceId === deviceId) {
+                                this.syncRealtimeAudioListener();
+                            }
+                        }, 1000);
+                    };
+
+                    handles.onValue(audioRef, onData, onError);
+                    this.realtimeSubscriptions.push({ ref: audioRef, onData });
+                }
+
+                this.logFirebaseListenerTelemetry('listener_started', {
+                    device_id: deviceId,
+                    path: this.priorityRealtimePaths(deviceId)[0],
+                });
+            },
+
+            parseRealtimeAudioSample(raw, deviceId) {
+                if (!raw || typeof raw !== 'object') return null;
+
+                const telemetry = raw?.telemetry || {};
+                const ml = raw?.ml || {};
+
+                let peakDbfs = this.toFiniteNumber(raw?.peak_dbfs ?? telemetry?.peak_dbfs);
+                let loudnessDbfs = this.toFiniteNumber(raw?.loudness_dbfs ?? telemetry?.loudness_dbfs ?? raw?.sound_db ?? telemetry?.sound_db);
+                let dominantHz = this.toFiniteNumber(raw?.dominant_hz ?? telemetry?.dominant_hz);
+
+                if (peakDbfs != null) peakDbfs = this.clamp(peakDbfs, -120, 0);
+                if (loudnessDbfs != null) loudnessDbfs = this.clamp(loudnessDbfs, -120, 0);
+                if (dominantHz != null && dominantHz <= 0) dominantHz = null;
+
+                let confidence = this.toFiniteNumber(raw?.confidence ?? raw?.confidence_pct ?? ml?.confidence_pct);
+                if (confidence != null) {
+                    if (confidence > 1 && confidence <= 100) confidence = confidence / 100;
+                    confidence = this.clamp(confidence, 0, 1);
+                }
+
+                const species = typeof raw?.species === 'string'
+                    ? raw.species.trim()
+                    : (ml?.species?.common_name || null);
+
+                const tsRaw = raw?.ts ?? raw?.timestamp ?? raw?.recorded_at ?? telemetry?.recorded_at;
+                const parsedDate = tsRaw ? new Date(tsRaw) : new Date();
+                const ts = Number.isNaN(parsedDate.getTime()) ? new Date().toISOString() : parsedDate.toISOString();
+
+                const durationSec = this.toFiniteNumber(raw?.duration_sec);
+                const hasSignal = peakDbfs != null || loudnessDbfs != null || dominantHz != null || species || confidence != null;
+                if (!hasSignal) return null;
+
+                return {
+                    device_id: String(raw?.device_id || deviceId || '').trim() || deviceId,
+                    ts,
+                    source: raw?.source || 'firebase-realtime',
+                    species: species || null,
+                    confidence,
+                    loudness_dbfs: loudnessDbfs,
+                    peak_dbfs: peakDbfs,
+                    dominant_hz: dominantHz,
+                    duration_sec: durationSec,
+                };
+            },
+
+            applyBestRealtimeSample(deviceId) {
+                const orderedPaths = this.priorityRealtimePaths(deviceId);
+                for (const path of orderedPaths) {
+                    const sample = this.realtimePathSamples[path];
+                    if (!sample) continue;
+                    this.applyRealtimeSampleToDevice(deviceId, sample, path);
+                    return;
+                }
+            },
+
+            mergeRealtimeIntoStation(station, sample) {
+                if (!sample || !station) return station;
+
+                const merged = {
+                    ...station,
+                    telemetry: {
+                        ...(station.telemetry || {}),
+                    },
+                    ml: {
+                        ...(station.ml || {}),
+                        species: {
+                            ...(station?.ml?.species || {}),
+                        },
+                    },
+                };
+
+                const preferredLoudness = sample.peak_dbfs ?? sample.loudness_dbfs;
+                if (preferredLoudness != null) {
+                    merged.telemetry.sound_db = Math.round(preferredLoudness * 10) / 10;
+                }
+                if (sample.dominant_hz != null) {
+                    merged.telemetry.dominant_hz = Math.round(sample.dominant_hz);
+                }
+                merged.telemetry.recorded_at = sample.ts;
+
+                if (sample.species) {
+                    merged.ml.species.common_name = sample.species;
+                }
+                if (sample.confidence != null) {
+                    merged.ml.confidence_pct = Math.round(sample.confidence * 100);
+                }
+
+                merged.realtime_audio = {
+                    ...(station.realtime_audio || {}),
+                    ...sample,
+                };
+
+                return merged;
+            },
+
+            pushRealtimeSample(deviceId, sample) {
+                const now = Date.now();
+                const parsedMs = Date.parse(sample.ts);
+                const tsMs = Number.isFinite(parsedMs) ? parsedMs : now;
+                const nextSample = {
+                    ...sample,
+                    _ts_ms: tsMs,
+                };
+
+                const current = Array.isArray(this.realtimeSamplesByDevice[deviceId])
+                    ? this.realtimeSamplesByDevice[deviceId]
+                    : [];
+                const next = [...current, nextSample]
+                    .filter((row) => Number.isFinite(row._ts_ms) && now - row._ts_ms <= 120000)
+                    .slice(-900);
+
+                this.realtimeSamplesByDevice = {
+                    ...this.realtimeSamplesByDevice,
+                    [deviceId]: next,
+                };
+            },
+
+            applyRealtimeSampleToDevice(deviceId, sample, path) {
+                this.latestRealtimeByDevice = {
+                    ...this.latestRealtimeByDevice,
+                    [deviceId]: sample,
+                };
+
+                this.pushRealtimeSample(deviceId, sample);
+                this.realtimeLastSuccessIso = sample.ts;
+                this.lastUpdatedAt = new Date();
+
+                this.stations = this.stations.map((station) => {
+                    if (this.stationId(station) !== deviceId) return station;
+                    return this.mergeRealtimeIntoStation(station, sample);
+                });
+
+                if (this.selectedStation && this.stationId(this.selectedStation) === deviceId) {
+                    const refreshed = this.stations.find((station) => this.stationId(station) === deviceId);
+                    if (refreshed) this.selectedStation = refreshed;
+                }
+
+                if (this.realtimePathUsed !== path) {
+                    this.realtimePathUsed = path;
+                    this.logFirebaseListenerTelemetry('path_selected', {
+                        path,
+                        last_success_at: sample.ts,
+                    });
+                }
+
+                const now = Date.now();
+                if (now - this.realtimeTelemetryHeartbeatAt > 30000) {
+                    this.realtimeTelemetryHeartbeatAt = now;
+                    this.logFirebaseListenerTelemetry('listener_heartbeat', {
+                        path,
+                        last_success_at: sample.ts,
+                    });
+                }
+            },
+
+            applyRealtimeEnrichment() {
+                this.stations = this.stations.map((station) => {
+                    const id = this.stationId(station);
+                    if (!id) return station;
+                    const sample = this.latestRealtimeByDevice[id];
+                    if (!sample) return station;
+                    return this.mergeRealtimeIntoStation(station, sample);
+                });
+
+                const selectedId = this.stationId(this.selectedStation);
+                if (selectedId) {
+                    const refreshed = this.stations.find((station) => this.stationId(station) === selectedId);
+                    if (refreshed) this.selectedStation = refreshed;
+                }
+            },
+
+            normalizedAudioFeatures(deviceId = this.stationId(this.selectedStation), windowSec = 120) {
+                if (!deviceId) return { available: false };
+
+                const all = Array.isArray(this.realtimeSamplesByDevice[deviceId])
+                    ? this.realtimeSamplesByDevice[deviceId]
+                    : [];
+                if (!all.length) return { available: false };
+
+                const now = Date.now();
+                const windowMs = Math.max(60, windowSec) * 1000;
+                const samples = all.filter((row) => Number.isFinite(row?._ts_ms) && now - row._ts_ms <= windowMs);
+                if (!samples.length) return { available: false };
+
+                const pickLoudness = (row) => this.toFiniteNumber(row?.peak_dbfs ?? row?.loudness_dbfs);
+                const loudnessValues = samples.map(pickLoudness).filter((n) => Number.isFinite(n));
+                const dominantValues = samples.map((row) => this.toFiniteNumber(row?.dominant_hz)).filter((n) => Number.isFinite(n));
+
+                const firstTs = samples[0]._ts_ms;
+                const lastTs = samples[samples.length - 1]._ts_ms;
+                const spanSec = Math.max(1, (lastTs - firstTs) / 1000);
+                const eventRatePerMin = (samples.length / spanSec) * 60;
+
+                const avg = (list) => (list.length ? list.reduce((acc, n) => acc + n, 0) / list.length : null);
+                const avgLoudnessDbfs = avg(loudnessValues);
+
+                const trendPerMin = (list) => {
+                    if (list.length < 2) return 0;
+                    return ((list[list.length - 1] - list[0]) / spanSec) * 60;
+                };
+
+                const peakTrendDbPerMin = trendPerMin(loudnessValues);
+                const dominantTrendHzPerMin = trendPerMin(dominantValues);
+
+                const normalize = (value, min, max) => {
+                    if (!Number.isFinite(value)) return null;
+                    return this.clamp((value - min) / (max - min), 0, 1);
+                };
+
+                return {
+                    available: true,
+                    avg_loudness_dbfs: avgLoudnessDbfs,
+                    peak_trend_db_per_min: peakTrendDbPerMin,
+                    dominant_trend_hz_per_min: dominantTrendHzPerMin,
+                    event_rate_per_min: eventRatePerMin,
+                    norm: {
+                        avg_loudness: normalize(avgLoudnessDbfs, -120, 0),
+                        peak_trend: normalize(peakTrendDbPerMin, -20, 20),
+                        dominant_trend: normalize(dominantTrendHzPerMin, -1500, 1500),
+                        event_rate: normalize(eventRatePerMin, 0, 120),
+                    },
+                };
             },
 
             passesZone(station) {
@@ -617,6 +997,7 @@
 
             closePanel() {
                 this.selectedStation = null;
+                this.syncRealtimeAudioListener();
             },
 
             /** @deprecated kept for backward compat with any old references */
@@ -713,6 +1094,7 @@
                     const stations = payload?.stations;
                     if (Array.isArray(stations)) {
                         this.stations = await this.mergeWithFirebaseStations(stations);
+                        this.applyRealtimeEnrichment();
                         this.lastUpdatedAt = new Date();
 
                         this.refreshGoogleMarkers(false);
@@ -722,6 +1104,8 @@
                             const updated = this.stations.find((s) => this.stationId(s) === selectedId);
                             if (updated) this.selectedStation = updated;
                         }
+
+                        this.syncRealtimeAudioListener();
                     }
                 } catch (e) {
                     // ignore transient network errors
@@ -866,12 +1250,14 @@
                 const get = window.firebaseGet;
                 const child = window.firebaseChild;
                 const push = window.firebasePush;
+                const onValue = window.firebaseOnValue;
+                const off = window.firebaseOff;
 
-                if (!db || !ref || !set || !get || !child || !push) {
+                if (!db || !ref || !set || !get || !child || !push || !onValue || !off) {
                     return null;
                 }
 
-                return { db, ref, set, get, child, push };
+                return { db, ref, set, get, child, push, onValue, off };
             },
 
             async withTimeout(promise, label, timeoutMs = 10000) {
@@ -1229,6 +1615,23 @@
             },
 
             futureHeadline() {
+                const audio = this.normalizedAudioFeatures();
+                if (audio.available) {
+                    if ((audio.norm?.event_rate ?? 0) > 0.55 && (audio.norm?.avg_loudness ?? 0) > 0.45) {
+                        return {
+                            title: 'Идэвхжил өсөх төлөв',
+                            detail: `Audio урсгал тогтвортой (avg ${Math.round(audio.avg_loudness_dbfs ?? 0)} dBFS, rate ${Math.round(audio.event_rate_per_min ?? 0)}/min).`,
+                        };
+                    }
+
+                    if ((audio.norm?.event_rate ?? 0) < 0.2 && (audio.norm?.avg_loudness ?? 1) < 0.35) {
+                        return {
+                            title: 'Нам гүм төлөв',
+                            detail: `Realtime дуу нам (avg ${Math.round(audio.avg_loudness_dbfs ?? 0)} dBFS) — ажиглалтыг үргэлжлүүлнэ.`,
+                        };
+                    }
+                }
+
                 const stations = this.visibleStations();
                 const avgEco = stations.length
                     ? Math.round(stations.reduce((a, s) => a + Number(s?.ml?.eco_score ?? 0), 0) / stations.length)
@@ -1252,6 +1655,17 @@
             futureDrivers() {
                 const stations = this.visibleStations();
                 const drivers = [];
+                const audio = this.normalizedAudioFeatures();
+
+                if (audio.available) {
+                    drivers.push(`Audio event rate: ${Math.round(audio.event_rate_per_min ?? 0)} /min.`);
+                    if (Number.isFinite(audio.peak_trend_db_per_min)) {
+                        drivers.push(`Peak trend: ${audio.peak_trend_db_per_min >= 0 ? '+' : ''}${Math.round(audio.peak_trend_db_per_min)} dBFS/min.`);
+                    }
+                    if (Number.isFinite(audio.dominant_trend_hz_per_min)) {
+                        drivers.push(`Dominant freq trend: ${audio.dominant_trend_hz_per_min >= 0 ? '+' : ''}${Math.round(audio.dominant_trend_hz_per_min)} Hz/min.`);
+                    }
+                }
 
                 const warnings = stations.filter((s) => s?.ml?.status === 'Warning').length;
                 if (warnings) drivers.push(`Warning статус: ${warnings} станц.`);

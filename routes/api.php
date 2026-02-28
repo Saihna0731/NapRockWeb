@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\FirebaseListenerTelemetryController;
 use App\Http\Controllers\StationApiController;
 use App\Http\Controllers\StationDetectionIngestController;
 use App\Http\Controllers\StationTelemetryIngestController;
@@ -9,3 +10,4 @@ Route::get('/stations', StationApiController::class);
 
 Route::post('/stations/{station}/telemetry', StationTelemetryIngestController::class);
 Route::post('/stations/{station}/detection', StationDetectionIngestController::class);
+Route::post('/firebase/listener-telemetry', FirebaseListenerTelemetryController::class);

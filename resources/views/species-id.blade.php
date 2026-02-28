@@ -43,8 +43,13 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="rounded-2xl border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-[#1a2e21] p-5">
             <p class="text-xs font-black text-primary">TOP MATCH</p>
-            <h3 class="text-lg font-black mt-1">Scarlet Macaw</h3>
-            <p class="text-xs text-text-muted">Ara macao</p>
+            <div class="flex items-center gap-3 mt-2">
+                <img src="https://cdn.download.ams.birds.cornell.edu/api/v1/asset/303490301/1200" alt="Scarlet Macaw" class="w-16 h-16 rounded-xl object-cover"/>
+                <div>
+                    <h3 class="text-lg font-black">Scarlet Macaw</h3>
+                    <p class="text-xs text-text-muted">Ara macao</p>
+                </div>
+            </div>
             <div class="mt-4 flex items-center justify-between">
                 <span class="text-[10px] font-black uppercase tracking-widest text-text-muted">Confidence</span>
                 <span class="text-sm font-black">96%</span>
@@ -53,8 +58,13 @@
 
         <div class="rounded-2xl border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-[#1a2e21] p-5">
             <p class="text-xs font-black text-accent-blue">RECENT</p>
-            <h3 class="text-lg font-black mt-1">Keel-billed Toucan</h3>
-            <p class="text-xs text-text-muted">Ramphastos sulfuratus</p>
+            <div class="flex items-center gap-3 mt-2">
+                <img src="https://cdn.download.ams.birds.cornell.edu/api/v1/asset/305566541/1200" alt="Keel-billed Toucan" class="w-16 h-16 rounded-xl object-cover"/>
+                <div>
+                    <h3 class="text-lg font-black">Keel-billed Toucan</h3>
+                    <p class="text-xs text-text-muted">Ramphastos sulfuratus</p>
+                </div>
+            </div>
             <div class="mt-4 flex items-center justify-between">
                 <span class="text-[10px] font-black uppercase tracking-widest text-text-muted">Confidence</span>
                 <span class="text-sm font-black">87%</span>
@@ -63,8 +73,13 @@
 
         <div class="rounded-2xl border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-[#1a2e21] p-5">
             <p class="text-xs font-black text-text-muted">DEMO</p>
-            <h3 class="text-lg font-black mt-1">Northern Cardinal</h3>
-            <p class="text-xs text-text-muted">Cardinalis cardinalis</p>
+            <div class="flex items-center gap-3 mt-2">
+                <img src="https://cdn.download.ams.birds.cornell.edu/api/v1/asset/305543771/1200" alt="Northern Cardinal" class="w-16 h-16 rounded-xl object-cover"/>
+                <div>
+                    <h3 class="text-lg font-black">Northern Cardinal</h3>
+                    <p class="text-xs text-text-muted">Cardinalis cardinalis</p>
+                </div>
+            </div>
             <div class="mt-4 flex items-center justify-between">
                 <span class="text-[10px] font-black uppercase tracking-widest text-text-muted">Confidence</span>
                 <span class="text-sm font-black">94%</span>

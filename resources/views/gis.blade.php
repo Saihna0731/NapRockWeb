@@ -89,7 +89,7 @@
                 <div x-ref="gisMap" class="absolute inset-0 z-0"></div>
 
                 {{-- Map overlay: station count --}}
-                <div class="absolute top-3 left-3 z-10 rounded-xl border border-border-muted dark:border-[#2a3a2e] bg-white/90 dark:bg-background-dark/80 backdrop-blur px-3 py-2">
+                <div class="absolute top-14 left-3 z-10 rounded-xl border border-border-muted dark:border-[#2a3a2e] bg-white/90 dark:bg-background-dark/80 backdrop-blur px-3 py-2">
                     <p class="text-[10px] font-black uppercase tracking-widest text-text-muted">Google Maps</p>
                     <p class="text-xs font-bold" x-text="`${visibleStations().length} station(s) shown`"></p>
                 </div>

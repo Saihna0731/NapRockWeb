@@ -1,6 +1,6 @@
 import './bootstrap';
 import '../css/app.css';
-import { child, firebaseApp, firebaseDatabase, get, push, ref, set } from './firebase';
+import { child, firebaseApp, firebaseDatabase, get, off, onValue, push, ref, set } from './firebase';
 
 import Alpine from 'alpinejs';
 
@@ -20,6 +20,8 @@ window.firebaseSet = set;
 window.firebaseGet = get;
 window.firebaseChild = child;
 window.firebasePush = push;
+window.firebaseOnValue = onValue;
+window.firebaseOff = off;
 
 // Fix Leaflet default marker icons when bundling with Vite.
 delete L.Icon.Default.prototype._getIconUrl;
