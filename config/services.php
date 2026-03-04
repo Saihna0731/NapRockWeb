@@ -39,6 +39,7 @@ return [
         'enabled' => env('PYTHON_API_ENABLED', false),
         'base_url' => env('PYTHON_API_URL'),
         'stations_path' => env('PYTHON_STATIONS_PATH', '/stations'),
+        'api_key' => env('PYTHON_API_KEY'),
     ],
 
 ];

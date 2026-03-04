@@ -10,20 +10,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 </head>
-<body class="bg-background-light dark:bg-background-dark text-[#111813] dark:text-white transition-colors duration-300 font-display">
+<body
+    x-data="liveListening()"
+    class="bg-background-light dark:bg-background-dark text-[#111813] dark:text-white transition-colors duration-300 font-display"
+>
 <div class="flex h-screen overflow-hidden">
     <!-- Sidebar: Device Selector -->
     <aside class="w-72 border-r border-border-muted dark:border-[#2a3a2e] flex flex-col bg-white dark:bg-[#152a1c] shrink-0">
         <div class="p-6 border-b border-border-muted dark:border-[#2a3a2e] flex items-center gap-3">
-            <div class="text-primary">
-                <svg class="size-8" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M39.5563 34.1455V13.8546C39.5563 15.708 36.8773 17.3437 32.7927 18.3189C30.2914 18.916 27.263 19.2655 24 19.2655C20.737 19.2655 17.7086 18.916 15.2073 18.3189C11.1227 17.3437 8.44365 15.708 8.44365 13.8546V34.1455C8.44365 35.9988 11.1227 37.6346 15.2073 38.6098C17.7086 39.2069 20.737 39.5564 24 39.5564C27.1288 39.5564 30.2914 39.2069 32.7927 38.6098C36.8773 37.6346 39.5563 35.9988 39.5563 34.1455Z" fill="currentColor"></path>
-                    <path clip-rule="evenodd" d="M10.4485 13.8519C10.4749 13.9271 10.6203 14.246 11.379 14.7361C12.298 15.3298 13.7492 15.9145 15.6717 16.3735C18.0007 16.9296 20.8712 17.2655 24 17.2655C27.1288 17.2655 29.9993 16.9296 32.3283 16.3735C34.2508 15.9145 35.702 15.3298 36.621 14.7361C37.3796 14.246 37.5251 13.9271 37.5515 13.8519C37.5287 13.7876 37.4333 13.5973 37.0635 13.2931C36.5266 12.8516 35.6288 12.3647 34.343 11.9175C31.79 11.0295 28.1333 10.4437 24 10.4437C19.8667 10.4437 16.2099 11.0295 13.657 11.9175C12.3712 12.3647 11.4734 12.8516 10.9365 13.2931C10.5667 13.5973 10.4713 13.7876 10.4485 13.8519ZM37.5563 18.7877C36.3176 19.3925 34.8502 19.8839 33.2571 20.2642C30.5836 20.9025 27.3973 21.2655 24 21.2655C20.6027 21.2655 17.4164 20.9025 14.7429 20.2642C13.1498 19.8839 11.6824 19.3925 10.4436 18.7877V34.1275C10.4515 34.1545 10.5427 34.4867 11.379 35.027C12.298 35.6207 13.7492 36.2054 15.6717 36.6644C18.0007 37.2205 20.8712 37.5564 24 37.5564C27.1288 37.5564 29.9993 37.2205 32.3283 36.6644C34.2508 36.2054 35.702 35.6207 36.621 35.027C37.4573 34.4867 37.5485 34.1546 37.5563 34.1275V18.7877ZM41.5563 13.8546V34.1455C41.5563 36.1078 40.158 37.5042 38.7915 38.3869C37.3498 39.3182 35.4192 40.0389 33.2571 40.5551C30.5836 41.1934 27.3973 41.5564 24 41.5564C20.6027 41.5564 17.4164 41.1934 14.7429 40.5551C12.5808 40.0389 10.6502 39.3182 9.20848 38.3869C7.84205 37.5042 6.44365 36.1078 6.44365 34.1455L6.44365 13.8546C6.44365 12.2684 7.37223 11.0454 8.39581 10.2036C9.43325 9.3505 10.8137 8.67141 12.343 8.13948C15.4203 7.06909 19.5418 6.44366 24 6.44366C28.4582 6.44366 32.5797 7.06909 35.657 8.13948C37.1863 8.67141 38.5667 9.3505 39.6042 10.2036C40.6278 11.0454 41.5563 12.2684 41.5563 13.8546Z" fill="currentColor" fill-rule="evenodd"></path>
-                </svg>
-            </div>
-            <div>
-                <a class="font-bold text-xl tracking-tight" href="{{ route('dashboard') }}">EST</a>
-                <p class="text-[10px] uppercase tracking-widest text-text-muted opacity-80">Eco System Translator</p>
+            <div class="flex items-center gap-3">
+                <a class="flex items-center justify-center size-10 bg-primary rounded-lg text-background-dark font-black text-lg" href="{{ route('home') }}">EST</a>
+                <div>
+                    <a class="font-bold text-xl tracking-tight" href="{{ route('dashboard') }}">EST</a>
+                    <p class="text-[10px] uppercase tracking-widest text-text-muted opacity-80">Eco System Translator</p>
+                </div>
             </div>
         </div>
 
@@ -31,53 +31,61 @@
             <div>
                 <h3 class="px-3 text-xs font-bold text-text-muted uppercase tracking-wider mb-3">Remote Audio Sensors</h3>
                 <div class="space-y-1">
-                    <button class="w-full flex items-center justify-between px-3 py-3 rounded-lg bg-primary/10 border border-primary/20 text-[#111813] dark:text-primary" type="button">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-lg">settings_remote</span>
-                            <span class="text-sm font-semibold">Device #1</span>
-                        </div>
-                        <span class="size-2 bg-primary rounded-full animate-pulse"></span>
-                    </button>
-                    <button class="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-text-muted" type="button">
-                        <span class="material-symbols-outlined text-lg">settings_remote</span>
-                        <span class="text-sm font-medium">Device #2 (Idle)</span>
-                    </button>
-                    <button class="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-text-muted opacity-50" type="button">
-                        <span class="material-symbols-outlined text-lg">wifi_off</span>
-                        <span class="text-sm font-medium">Device #3 (Offline)</span>
-                    </button>
+                    <template x-if="device">
+                        <button class="w-full flex items-center justify-between px-3 py-3 rounded-lg bg-primary/10 border border-primary/20 text-[#111813] dark:text-primary" type="button">
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-lg">settings_remote</span>
+                                <div class="text-left">
+                                    <span class="text-sm font-semibold block" x-text="device.device_id || 'ESP32'"></span>
+                                    <span class="text-[10px] text-text-muted" x-text="[device.hardware?.mcu, device.hardware?.mic].filter(Boolean).join(' / ')"></span>
+                                </div>
+                            </div>
+                            <span class="size-2 rounded-full animate-pulse" :class="connected ? 'bg-primary' : 'bg-red-500'"></span>
+                        </button>
+                    </template>
+                    <template x-if="!device && !loading">
+                        <div class="px-3 py-3 text-xs text-text-muted">No device connected</div>
+                    </template>
                 </div>
             </div>
 
             <div>
-                <h3 class="px-3 text-xs font-bold text-text-muted uppercase tracking-wider mb-3">Global Overviews</h3>
-                <div class="space-y-1">
-                    <button class="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-[#111813] dark:text-white" type="button">
-                        <span class="material-symbols-outlined text-lg">public</span>
-                        <span class="text-sm font-medium">Network Map</span>
-                    </button>
-                    <button class="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-[#111813] dark:text-white" type="button">
-                        <span class="material-symbols-outlined text-lg">history</span>
-                        <span class="text-sm font-medium">Archive</span>
-                    </button>
-                    <button class="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-[#111813] dark:text-white" type="button">
-                        <span class="material-symbols-outlined text-lg">settings</span>
-                        <span class="text-sm font-medium">System Settings</span>
-                    </button>
+                <h3 class="px-3 text-xs font-bold text-text-muted uppercase tracking-wider mb-3">Sensor Info</h3>
+                <div class="space-y-2 px-3">
+                    <template x-if="device">
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-xs">
+                                <span class="text-text-muted">Wi-Fi</span>
+                                <span class="font-bold" x-text="device.wifi?.ssid ? (device.wifi.ssid + ' (' + device.wifi.rssi + ' dBm)') : '—'"></span>
+                            </div>
+                            <div class="flex justify-between text-xs">
+                                <span class="text-text-muted">IP</span>
+                                <span class="font-bold" x-text="device.wifi?.ip || '—'"></span>
+                            </div>
+                            <div class="flex justify-between text-xs">
+                                <span class="text-text-muted">Sensor</span>
+                                <span class="font-bold" x-text="device.hardware?.sensor || '—'"></span>
+                            </div>
+                            <div class="flex justify-between text-xs">
+                                <span class="text-text-muted">Zone</span>
+                                <span class="font-bold" x-text="device.station?.zone || '—'"></span>
+                            </div>
+                            <div class="flex justify-between text-xs">
+                                <span class="text-text-muted">Coordinates</span>
+                                <span class="font-bold text-[10px]" x-text="device.station?.coordinates ? (device.station.coordinates.lat + ', ' + device.station.coordinates.lng) : '—'"></span>
+                            </div>
+                        </div>
+                    </template>
                 </div>
+            </div>
+
+            <div class="px-3">
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-text-muted">
+                    <span class="material-symbols-outlined text-lg">dashboard</span>
+                    <span class="text-sm font-medium">Back to Dashboard</span>
+                </a>
             </div>
         </nav>
-
-        <div class="p-4 border-t border-border-muted dark:border-[#2a3a2e]">
-            <div class="flex items-center gap-3 p-2 bg-[#f0f4f2] dark:bg-[#1a3022] rounded-xl">
-                <div class="size-10 rounded-full bg-cover bg-center" data-alt="User profile avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDmzkxrlQPAFFXTax9ZPJxpiXOu10VjEGzIjVbER44tQze32MetbIss_Iqhz75NEv1O-SSVWsJQAYuY_B3UkEyKsIr003XTtZSNtsmFpz8u7TMfXiAeptrtItFDnNUeJcsiVbVJGhccPjbCeac3Cl_lekkqPTkZ61ZAM27beJFQXP57EUoWAbi4CiAirFLj-7t5wUpn9ZajwFErmGkVWNGUqpkCdW8NRsAm7roQrqOvI-3Ie675THzCnEcp3rlwqZjhTcvTrAp3WFo");'></div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-xs font-bold truncate">Dr. Aris Thorne</p>
-                    <p class="text-[10px] text-text-muted">Field Lead</p>
-                </div>
-                <span class="material-symbols-outlined text-text-muted cursor-pointer">logout</span>
-            </div>
-        </div>
     </aside>
 
     <!-- Main Content -->
@@ -87,169 +95,474 @@
             <div class="flex items-center gap-4">
                 <span class="text-sm font-medium text-text-muted">Monitoring</span>
                 <span class="material-symbols-outlined text-text-muted text-xs">chevron_right</span>
-                <span class="text-sm font-bold">Device #1 Live Stream</span>
+                <span class="text-sm font-bold" x-text="device ? (device.device_id + ' Live Stream') : 'Connecting...'"></span>
             </div>
             <div class="flex items-center gap-6">
                 <div class="flex items-center gap-2">
-                    <span class="size-2 rounded-full bg-red-500 recording-pulse"></span>
-                    <span class="text-xs font-bold uppercase tracking-widest text-red-500">Live Recording</span>
+                    <span class="size-2 rounded-full" :class="connected ? 'bg-primary recording-pulse' : 'bg-red-500'"></span>
+                    <span class="text-xs font-bold uppercase tracking-widest" :class="connected ? 'text-primary' : 'text-red-500'" x-text="connected ? 'Live' : (error ? 'Error' : 'Connecting...')"></span>
                 </div>
                 <div class="h-6 w-px bg-border-muted dark:border-[#2a3a2e]"></div>
-                <button class="bg-primary text-[#111813] px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2" type="button">
-                    <span class="material-symbols-outlined text-lg">sensors</span>
-                    Live Listening
-                </button>
+                <div class="text-xs text-text-muted font-bold">
+                    Updated: <span x-text="lastUpdatedLabel"></span>
+                </div>
             </div>
         </header>
 
         <div class="flex-1 flex overflow-hidden">
-            <!-- Center: Waveform & Visualizer -->
+            <!-- Center: Waveform & Stats -->
             <div class="flex-1 flex flex-col p-8 gap-6 overflow-y-auto">
                 <!-- Title & Summary -->
                 <div class="flex flex-wrap justify-between items-end gap-4">
                     <div class="space-y-1">
                         <h2 class="text-4xl font-black leading-tight tracking-tight">Live Audio Monitoring</h2>
-                        <p class="text-text-muted font-medium">Real-time acoustic analysis for Amazon Basin Node #01</p>
+                        <p class="text-text-muted font-medium">Real-time acoustic analysis from <span class="font-bold" x-text="device?.device_id || 'ESP32 sensor'"></span></p>
                     </div>
-                    <div class="flex gap-4">
+                    <div class="flex gap-6">
                         <div class="flex flex-col items-end">
-                            <span class="text-[10px] font-bold uppercase text-text-muted tracking-widest">Active Time</span>
-                            <span class="text-lg font-bold tabular-nums">04:22:18</span>
+                            <span class="text-[10px] font-bold uppercase text-text-muted tracking-widest">Eco Status</span>
+                            <span class="text-lg font-bold" :class="device?.eco?.status === 'Healthy' ? 'text-primary' : 'text-red-500'" x-text="device?.eco?.status || '—'"></span>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <span class="text-[10px] font-bold uppercase text-text-muted tracking-widest">Trend</span>
+                            <span class="text-lg font-bold" x-text="device?.eco?.trend || '—'"></span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Main Waveform Display -->
+                <!-- Main Spectrogram Display -->
                 <div class="relative group">
-                    <div class="bg-black rounded-2xl aspect-[21/9] flex items-end justify-center gap-1 p-8 overflow-hidden relative">
-                        <!-- Simplified Waveform Visualizer -->
-                        <div class="waveform-bar w-1.5 bg-primary/20 rounded-full" style="animation-delay: 0.1s; height: 30%"></div>
-                        <div class="waveform-bar w-1.5 bg-primary/40 rounded-full" style="animation-delay: 0.2s; height: 50%"></div>
-                        <div class="waveform-bar w-1.5 bg-primary/60 rounded-full" style="animation-delay: 0.3s; height: 80%"></div>
-                        <div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: 0.4s; height: 60%"></div>
-                        <div class="waveform-bar w-1.5 bg-primary/80 rounded-full" style="animation-delay: 0.5s; height: 90%"></div>
-                        <div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: 0.1s; height: 40%"></div>
-                        <div class="waveform-bar w-1.5 bg-primary/50 rounded-full" style="animation-delay: 0.3s; height: 70%"></div>
-                        <div class="waveform-bar w-1.5 bg-primary/30 rounded-full" style="animation-delay: 0.6s; height: 25%"></div>
-                        <div class="waveform-bar w-1.5 bg-primary/60 rounded-full" style="animation-delay: 0.2s; height: 45%"></div>
-                        <div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: 0.4s; height: 75%"></div>
-                        <div class="waveform-bar w-1.5 bg-primary/70 rounded-full" style="animation-delay: 0.1s; height: 55%"></div>
-                        <div class="waveform-bar w-1.5 bg-primary/20 rounded-full" style="animation-delay: 0.5s; height: 85%"></div>
-                        <div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: 0.3s; height: 65%"></div>
-                        <div class="waveform-bar w-1.5 bg-primary/40 rounded-full" style="animation-delay: 0.6s; height: 35%"></div>
-                        <!-- Repeats to fill space -->
-                        <div class="waveform-bar w-1.5 bg-primary/60 rounded-full" style="animation-delay: 0.1s; height: 80%"></div>
-                        <div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: 0.4s; height: 60%"></div>
-                        <div class="waveform-bar w-1.5 bg-primary/80 rounded-full" style="animation-delay: 0.5s; height: 90%"></div>
-                        <div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: 0.1s; height: 40%"></div>
-                        <div class="waveform-bar w-1.5 bg-primary/50 rounded-full" style="animation-delay: 0.3s; height: 70%"></div>
-                        <div class="waveform-bar w-1.5 bg-primary/30 rounded-full" style="animation-delay: 0.6s; height: 25%"></div>
-                        <div class="waveform-bar w-1.5 bg-primary/60 rounded-full" style="animation-delay: 0.2s; height: 45%"></div>
-                        <div class="waveform-bar w-1.5 bg-primary rounded-full" style="animation-delay: 0.4s; height: 75%"></div>
-
-                        <!-- Spectrogram Overlay Grid -->
-                        <div class="absolute inset-0 grid grid-cols-12 grid-rows-6 pointer-events-none opacity-20">
-                            <div class="border-r border-b border-primary/30"></div><div class="border-r border-b border-primary/30"></div><div class="border-r border-b border-primary/30"></div><div class="border-r border-b border-primary/30"></div><div class="border-r border-b border-primary/30"></div><div class="border-r border-b border-primary/30"></div>
-                            <div class="border-r border-b border-primary/30"></div><div class="border-r border-b border-primary/30"></div><div class="border-r border-b border-primary/30"></div><div class="border-r border-b border-primary/30"></div><div class="border-r border-b border-primary/30"></div><div class="border-r border-b border-primary/30"></div>
-                            <div class="border-r border-b border-primary/30"></div><div class="border-r border-b border-primary/30"></div><div class="border-r border-b border-primary/30"></div><div class="border-r border-b border-primary/30"></div><div class="border-r border-b border-primary/30"></div><div class="border-r border-b border-primary/30"></div>
-                        </div>
-
-                        <!-- Playback Control Bar -->
-                        <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-white/10 backdrop-blur-xl px-6 py-3 rounded-full border border-white/20">
-                            <button class="text-white hover:text-primary transition-colors" type="button">
-                                <span class="material-symbols-outlined fill-1">pause</span>
-                            </button>
-                            <div class="h-6 w-px bg-white/20"></div>
-                            <div class="flex items-center gap-2 group/volume">
-                                <span class="material-symbols-outlined text-white text-sm">volume_up</span>
-                                <div class="w-24 h-1 bg-white/20 rounded-full overflow-hidden">
-                                    <div class="bg-primary h-full w-[70%]"></div>
+                    <div class="bg-[#0a0e0b] rounded-2xl overflow-hidden relative" style="height: 340px">
+                        <div class="flex h-full">
+                            <!-- dB Level Meter (left) -->
+                            <div class="w-16 flex flex-col items-center justify-between py-4 px-1 border-r border-white/5 shrink-0 relative">
+                                <span class="text-[8px] font-bold text-white/30 uppercase tracking-widest rotate-180" style="writing-mode:vertical-rl">Sound Level</span>
+                                <div class="flex-1 flex flex-col items-center justify-center py-2 w-full relative">
+                                    <!-- dB scale labels -->
+                                    <div class="absolute inset-y-2 left-0 flex flex-col justify-between items-end pr-1 pointer-events-none">
+                                        <span class="text-[7px] text-white/25 tabular-nums font-mono">100</span>
+                                        <span class="text-[7px] text-white/25 tabular-nums font-mono">80</span>
+                                        <span class="text-[7px] text-white/25 tabular-nums font-mono">60</span>
+                                        <span class="text-[7px] text-white/25 tabular-nums font-mono">40</span>
+                                        <span class="text-[7px] text-white/25 tabular-nums font-mono">20</span>
+                                        <span class="text-[7px] text-white/25 tabular-nums font-mono">0</span>
+                                    </div>
+                                    <!-- Meter bar -->
+                                    <div class="w-3 h-full rounded-full bg-white/5 overflow-hidden relative ml-4">
+                                        <div class="absolute bottom-0 left-0 right-0 rounded-full transition-all duration-200"
+                                             :style="`height: ${Math.min(100, Math.max(2, (device?.microphone?.sound_db ?? 0)))}%`"
+                                             :class="(device?.microphone?.sound_db ?? 0) > 70 ? 'db-meter-hot' : (device?.microphone?.sound_db ?? 0) > 45 ? 'db-meter-warm' : 'db-meter-cool'">
+                                        </div>
+                                        <!-- Peak indicator line -->
+                                        <div class="absolute left-0 right-0 h-[2px] bg-red-500/80 transition-all duration-500"
+                                             :style="`bottom: ${Math.min(100, Math.abs(device?.microphone?.peak_dbfs ?? 30))}%`"></div>
+                                    </div>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-sm font-black text-white tabular-nums" x-text="(device?.microphone?.sound_db ?? '—') + ''"></p>
+                                    <p class="text-[7px] text-white/30 font-bold">dB</p>
                                 </div>
                             </div>
-                            <div class="h-6 w-px bg-white/20"></div>
-                            <span class="text-white font-bold text-xs tabular-nums">LIVE</span>
+
+                            <!-- Spectrogram Canvas Area -->
+                            <div class="flex-1 relative overflow-hidden">
+                                <canvas x-ref="spectrogram" class="absolute inset-0 w-full h-full"></canvas>
+
+                                <!-- Frequency axis labels (right edge) -->
+                                <div class="absolute top-4 right-4 flex flex-col justify-between h-[calc(100%-2rem)] pointer-events-none">
+                                    <span class="text-[7px] text-white/20 font-mono tabular-nums">8kHz</span>
+                                    <span class="text-[7px] text-white/20 font-mono tabular-nums">4kHz</span>
+                                    <span class="text-[7px] text-white/20 font-mono tabular-nums">2kHz</span>
+                                    <span class="text-[7px] text-white/20 font-mono tabular-nums">1kHz</span>
+                                    <span class="text-[7px] text-white/20 font-mono tabular-nums">500Hz</span>
+                                    <span class="text-[7px] text-white/20 font-mono tabular-nums">0</span>
+                                </div>
+
+                                <!-- Top-left overlay -->
+                                <div class="absolute top-4 left-5 flex items-center gap-2 z-10">
+                                    <span class="size-2 rounded-full" :class="paused ? 'bg-yellow-400' : (connected ? 'bg-primary animate-pulse' : 'bg-red-500')"></span>
+                                    <span class="text-[9px] font-bold uppercase tracking-widest" :class="paused ? 'text-yellow-400/70' : 'text-white/40'" x-text="paused ? 'Paused' : (device?.source || 'awaiting data')"></span>
+                                </div>
+                                <div class="absolute top-4 right-20 text-[9px] font-bold text-white/25 z-10">
+                                    <span x-text="device?.microphone?.duration_sec ? (device.microphone.duration_sec + 's window') : ''"></span>
+                                </div>
+
+                                <!-- Waveform bars overlay on top of spectrogram -->
+                                <div class="absolute bottom-0 left-0 right-0 flex items-end justify-center gap-[2px] px-4 h-2/5 pointer-events-none z-10">
+                                    <template x-for="(bar, i) in waveformBars" :key="i">
+                                        <div class="w-[3px] rounded-t-sm transition-all duration-100"
+                                             :style="`height: ${bar}%; background: linear-gradient(to top, rgba(57,224,121,0.7), rgba(57,224,121,0.15)); box-shadow: 0 0 4px rgba(57,224,121,${bar/200});`"></div>
+                                    </template>
+                                </div>
+
+                                <!-- Horizontal scan line -->
+                                <div class="absolute left-0 right-0 h-px bg-primary/30 pointer-events-none z-10 scanline-anim"></div>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Control Bar -->
+                        <div class="absolute bottom-0 inset-x-0 flex items-center justify-between px-6 py-3 bg-gradient-to-t from-black/80 to-transparent z-20">
+                            <div class="flex items-center gap-4">
+                                <!-- Pause / Resume button -->
+                                <button type="button"
+                                        class="flex items-center justify-center size-9 rounded-full border transition-all"
+                                        :class="paused ? 'bg-primary/20 border-primary/40 text-primary hover:bg-primary/30' : 'bg-white/10 border-white/20 text-white hover:bg-white/20'"
+                                        @click="togglePause()">
+                                    <span class="material-symbols-outlined text-base" x-text="paused ? 'play_arrow' : 'pause'"></span>
+                                </button>
+                                <span class="text-[10px] font-bold uppercase tracking-wider" :class="paused ? 'text-yellow-400' : 'text-white/50'" x-text="paused ? 'Paused' : 'Streaming'"></span>
+                            </div>
+                            <div class="flex items-center gap-5">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-white/40 text-sm">graphic_eq</span>
+                                    <span class="text-white/70 text-[11px] font-bold tabular-nums" x-text="device?.microphone?.dominant_hz ? (device.microphone.dominant_hz + ' Hz') : '— Hz'"></span>
+                                </div>
+                                <div class="h-4 w-px bg-white/10"></div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-white/40 text-sm">volume_up</span>
+                                    <span class="text-white/70 text-[11px] font-bold tabular-nums" x-text="device?.microphone?.sound_db ? (device.microphone.sound_db + ' dB') : '— dB'"></span>
+                                </div>
+                                <div class="h-4 w-px bg-white/10"></div>
+                                <span class="text-[10px] font-black tabular-nums" :class="connected ? (paused ? 'text-yellow-400' : 'text-primary') : 'text-red-400'" x-text="connected ? (paused ? 'PAUSED' : 'LIVE') : 'OFFLINE'"></span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Stats Row -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="flex flex-col gap-2 rounded-xl p-6 border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-[#1a3022]">
-                        <p class="text-text-muted text-sm font-medium uppercase tracking-widest">Ambient Level</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="flex flex-col gap-2 rounded-xl p-5 border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-[#1a3022]">
+                        <p class="text-text-muted text-[10px] font-bold uppercase tracking-widest">Sound Level</p>
+                        <p class="text-2xl font-black"><span x-text="device?.microphone?.sound_db ?? '—'"></span> <span class="text-sm font-normal text-text-muted">dB</span></p>
+                    </div>
+                    <div class="flex flex-col gap-2 rounded-xl p-5 border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-[#1a3022]">
+                        <p class="text-text-muted text-[10px] font-bold uppercase tracking-widest">Eco Score</p>
                         <div class="flex items-end justify-between">
-                            <p class="text-3xl font-black">42 <span class="text-base font-normal">dB</span></p>
-                            <p class="text-primary text-sm font-bold flex items-center gap-1">
-                                <span class="material-symbols-outlined text-sm">trending_up</span> 2.1%
-                            </p>
+                            <p class="text-2xl font-black" x-text="device?.eco?.score ?? '—'"></p>
+                            <p class="text-xs font-bold" :class="device?.eco?.status === 'Healthy' ? 'text-primary' : 'text-red-500'" x-text="device?.eco?.status || ''"></p>
                         </div>
                     </div>
-                    <div class="flex flex-col gap-2 rounded-xl p-6 border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-[#1a3022]">
-                        <p class="text-text-muted text-sm font-medium uppercase tracking-widest">ML Confidence</p>
-                        <div class="flex items-end justify-between">
-                            <p class="text-3xl font-black">98.4<span class="text-base font-normal">%</span></p>
-                            <p class="text-primary text-sm font-bold flex items-center gap-1">
-                                <span class="material-symbols-outlined text-sm">check_circle</span> Stable
-                            </p>
-                        </div>
+                    <div class="flex flex-col gap-2 rounded-xl p-5 border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-[#1a3022]">
+                        <p class="text-text-muted text-[10px] font-bold uppercase tracking-widest">Temperature</p>
+                        <p class="text-2xl font-black"><span x-text="device?.environment?.temperature_c ?? '—'"></span><span class="text-sm font-normal text-text-muted">°C</span></p>
                     </div>
-                    <div class="flex flex-col gap-2 rounded-xl p-6 border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-[#1a3022]">
-                        <p class="text-text-muted text-sm font-medium uppercase tracking-widest">Spectral Density</p>
-                        <div class="flex items-end justify-between">
-                            <p class="text-3xl font-black">0.86 <span class="text-base font-normal">Hz/s</span></p>
-                            <p class="text-yellow-500 text-sm font-bold flex items-center gap-1">
-                                <span class="material-symbols-outlined text-sm">warning</span> Moderate
-                            </p>
-                        </div>
+                    <div class="flex flex-col gap-2 rounded-xl p-5 border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-[#1a3022]">
+                        <p class="text-text-muted text-[10px] font-bold uppercase tracking-widest">Activity</p>
+                        <p class="text-2xl font-black"><span x-text="device?.activity?.detections_per_hr ?? '—'"></span> <span class="text-sm font-normal text-text-muted">det/hr</span></p>
+                    </div>
+                </div>
+
+                <!-- Environment Detail Row -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="rounded-xl p-4 border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-[#1a3022]">
+                        <p class="text-text-muted text-[9px] font-bold uppercase tracking-widest">Peak dBFS</p>
+                        <p class="text-sm font-black mt-1" x-text="device?.microphone?.peak_dbfs != null ? (Math.round(device.microphone.peak_dbfs * 10) / 10) : '—'"></p>
+                    </div>
+                    <div class="rounded-xl p-4 border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-[#1a3022]">
+                        <p class="text-text-muted text-[9px] font-bold uppercase tracking-widest">Dominant Freq</p>
+                        <p class="text-sm font-black mt-1"><span x-text="device?.microphone?.dominant_hz ?? '—'"></span> Hz</p>
+                    </div>
+                    <div class="rounded-xl p-4 border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-[#1a3022]">
+                        <p class="text-text-muted text-[9px] font-bold uppercase tracking-widest">Pressure</p>
+                        <p class="text-sm font-black mt-1"><span x-text="device?.environment?.pressure_hpa ?? '—'"></span> hPa</p>
+                    </div>
+                    <div class="rounded-xl p-4 border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-[#1a3022]">
+                        <p class="text-text-muted text-[9px] font-bold uppercase tracking-widest">Confidence</p>
+                        <p class="text-sm font-black mt-1"><span x-text="device?.bird?.confidence_pct ?? '—'"></span>%</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Right: Identification Feed -->
+            <!-- Right: Live Identification Feed -->
             <div class="w-80 border-l border-border-muted dark:border-[#2a3a2e] flex flex-col bg-white dark:bg-[#152a1c] shrink-0">
                 <div class="p-6 border-b border-border-muted dark:border-[#2a3a2e]">
                     <h3 class="font-bold text-sm uppercase tracking-widest flex items-center gap-2">
                         <span class="material-symbols-outlined text-primary">analytics</span>
                         Live Identification
                     </h3>
+                    <p class="text-[10px] text-text-muted mt-1">Top-K predictions from AI model</p>
                 </div>
-                <div class="flex-1 overflow-y-auto p-4 space-y-4">
-                    <!-- ID Card -->
-                    <div class="p-3 bg-background-light dark:bg-[#1a3022] rounded-xl border border-border-muted dark:border-transparent hover:border-primary/50 transition-all cursor-pointer">
-                        <div class="flex gap-3">
-                            <div class="size-16 rounded-lg bg-cover bg-center shrink-0 border border-white/10" data-alt="Photo of a Northern Cardinal" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAZpKNj4Xj0WLxJ_1OYS-egzfNJuAc9RlE74OTi02QT6aUiF5ix454MiifabigWTe2BchVbTq9dsTNAhngeJrBmDxvOArGLxryI4bgIBoRahysQBIHJLUv4HbUu9I7ykThTTV74khMrfwVH6Rl3y3v9CPN9KURezR9f82XKKid0pzMR78RHJvXJ6XhHRpaF0TqLW8Kll3xpeO3p-HE85GUuytRBDCzCihegdEdMVNx-7gNBcB76moitwt8SpBdLyrOB2UIHJBPhwcg");'></div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex justify-between items-start">
-                                    <p class="text-xs font-bold text-primary">JUST NOW</p>
-                                    <span class="text-[10px] font-bold text-text-muted">94% MATCH</span>
+                <div class="flex-1 overflow-y-auto p-4 space-y-3">
+                    <template x-for="(pred, idx) in (device?.bird?.topk ?? [])" :key="idx">
+                        <div class="p-3 rounded-xl border border-border-muted dark:border-transparent transition-all"
+                             :class="idx === 0 ? 'bg-primary/5 border-primary/20' : 'bg-background-light dark:bg-[#1a3022]/40 opacity-80'">
+                            <div class="flex gap-3">
+                                <div class="size-14 rounded-lg bg-cover bg-center shrink-0 border border-white/10 bg-background-light dark:bg-background-dark"
+                                     :style="pred.image_url ? `background-image: url('${pred.image_url}')` : ''">
+                                    <template x-if="!pred.image_url">
+                                        <div class="size-full flex items-center justify-center text-text-muted">
+                                            <span class="material-symbols-outlined">flutter_dash</span>
+                                        </div>
+                                    </template>
                                 </div>
-                                <h4 class="text-sm font-bold truncate">Northern Cardinal</h4>
-                                <p class="text-[10px] text-text-muted">Cardinalis cardinalis</p>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex justify-between items-start">
+                                        <p class="text-xs font-bold" :class="idx === 0 ? 'text-primary' : 'text-text-muted'" x-text="idx === 0 ? 'TOP MATCH' : ('#' + (idx + 1))"></p>
+                                        <span class="text-[10px] font-black text-text-muted tabular-nums" x-text="pred.confidence_pct + '% MATCH'"></span>
+                                    </div>
+                                    <h4 class="text-sm font-bold truncate mt-0.5" x-text="pred.species || 'Unknown'"></h4>
+                                    <p class="text-[10px] text-text-muted italic" x-text="pred.scientific_name || ''"></p>
+                                </div>
+                            </div>
+                            <!-- Confidence bar -->
+                            <div class="mt-2 h-1 w-full rounded-full bg-border-muted dark:bg-white/10 overflow-hidden">
+                                <div class="h-full rounded-full transition-all duration-700"
+                                     :class="idx === 0 ? 'bg-primary' : 'bg-text-muted/40'"
+                                     :style="`width: ${pred.confidence_pct ?? 0}%`"></div>
                             </div>
                         </div>
-                    </div>
+                    </template>
 
-                    <div class="p-3 bg-white dark:bg-[#1a3022]/40 rounded-xl border border-border-muted dark:border-transparent opacity-80">
-                        <div class="flex gap-3">
-                            <div class="size-16 rounded-lg bg-cover bg-center shrink-0" data-alt="Photo of a Blue Jay" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA6GOlk1qhD0cmLt_6Perat9OU37whdFbwG6ks0KPBPs1fIwfgDOfp3oqbxmef5PAnPPGc_N06-9t0I9Ln0EZm-q1j9XklSJZa5DEZ2yhUnppoO9kFwCbqXZ7Y6Z4U1RESM_namBXU_DydMkYFm-xVpv1IzjJB2GG2sc_ky_4L5YIQfD4XO39j85HzZTdhaAk1lC_ySOTAjUOPe4ZYKH8iSJbyM0YeAhXVY2lcRjqCZZosWHC_zwykTqrhsTF31UlZdfJzR6vYGqp4");'></div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex justify-between items-start">
-                                    <p class="text-xs font-bold text-text-muted">2m ago</p>
-                                    <span class="text-[10px] font-bold text-text-muted">87% MATCH</span>
-                                </div>
-                                <h4 class="text-sm font-bold truncate">Blue Jay</h4>
-                                <p class="text-[10px] text-text-muted">Cyanocitta cristata</p>
-                            </div>
+                    <template x-if="!device?.bird?.topk?.length && !loading">
+                        <div class="flex flex-col items-center justify-center py-12 text-center">
+                            <span class="material-symbols-outlined text-4xl text-text-muted mb-3">flutter_dash</span>
+                            <p class="text-sm font-bold">No predictions yet</p>
+                            <p class="text-[10px] text-text-muted mt-1">Waiting for sensor data...</p>
                         </div>
-                    </div>
+                    </template>
+
+                    <template x-if="loading">
+                        <div class="flex flex-col items-center justify-center py-12 text-center">
+                            <span class="material-symbols-outlined text-4xl text-text-muted mb-3 animate-spin">progress_activity</span>
+                            <p class="text-sm font-bold">Connecting to sensor...</p>
+                        </div>
+                    </template>
                 </div>
-                <div class="p-4 border-t border-border-muted dark:border-[#2a3a2e]">
-                    <button class="w-full py-2 bg-[#f0f4f2] dark:bg-[#1a3022] rounded-lg text-xs font-bold hover:bg-primary hover:text-[#111813] transition-colors" type="button">
-                        VIEW FULL LOG
-                    </button>
+                <div class="p-4 border-t border-border-muted dark:border-[#2a3a2e] space-y-2">
+                    <div class="flex items-center justify-between text-[10px]">
+                        <span class="text-text-muted">Last updated</span>
+                        <span class="font-bold" x-text="lastUpdatedLabel"></span>
+                    </div>
+                    <a href="{{ route('dashboard') }}" class="block w-full text-center py-2 bg-[#f0f4f2] dark:bg-[#1a3022] rounded-lg text-xs font-bold hover:bg-primary hover:text-[#111813] transition-colors">
+                        BACK TO DASHBOARD
+                    </a>
                 </div>
             </div>
         </div>
     </main>
 </div>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('liveListening', () => ({
+            device: null,
+            connected: false,
+            loading: true,
+            error: null,
+            lastUpdatedAt: null,
+            pollTimer: null,
+            paused: false,
+            waveformBars: Array.from({ length: 60 }, () => 10 + Math.random() * 15),
+            waveformTimer: null,
+            spectrogramTimer: null,
+            spectrogramColumn: 0,
+            spectrogramCtx: null,
+
+            apiUrl: 'https://bird-edge-api-910518834273.asia-east1.run.app/api/v1/sensor/latest',
+            apiKey: 'birdedge_KfBfwrtXzd7IEeizQLc-iK9EVaJYzp1aJq_AK6p-qdU',
+
+            get lastUpdatedLabel() {
+                if (!this.lastUpdatedAt) return '—';
+                return this.lastUpdatedAt.toLocaleTimeString();
+            },
+
+            init() {
+                this.fetchSensor();
+                this.pollTimer = setInterval(() => {
+                    if (!this.paused) this.fetchSensor();
+                }, 3000);
+                this.startWaveformAnimation();
+                this.$nextTick(() => this.initSpectrogram());
+
+                window.addEventListener('beforeunload', () => {
+                    if (this.pollTimer) clearInterval(this.pollTimer);
+                    if (this.waveformTimer) clearInterval(this.waveformTimer);
+                    if (this.spectrogramTimer) clearInterval(this.spectrogramTimer);
+                });
+            },
+
+            togglePause() {
+                this.paused = !this.paused;
+            },
+
+            // ──── Canvas Spectrogram ────
+            initSpectrogram() {
+                const canvas = this.$refs.spectrogram;
+                if (!canvas) return;
+
+                const resize = () => {
+                    const rect = canvas.parentElement.getBoundingClientRect();
+                    canvas.width = Math.floor(rect.width);
+                    canvas.height = Math.floor(rect.height);
+                    this.spectrogramColumn = 0;
+                };
+                resize();
+                window.addEventListener('resize', resize);
+
+                this.spectrogramCtx = canvas.getContext('2d');
+                this.spectrogramColumn = 0;
+
+                this.spectrogramTimer = setInterval(() => {
+                    if (this.paused) return;
+                    this.drawSpectrogramColumn();
+                }, 80);
+            },
+
+            drawSpectrogramColumn() {
+                const ctx = this.spectrogramCtx;
+                if (!ctx) return;
+
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                const x = this.spectrogramColumn % w;
+
+                // Shift existing content left by 1 column for scrolling effect
+                if (this.spectrogramColumn >= w) {
+                    const img = ctx.getImageData(1, 0, w - 1, h);
+                    ctx.putImageData(img, 0, 0);
+                    ctx.clearRect(w - 1, 0, 1, h);
+                }
+
+                const drawX = this.spectrogramColumn >= w ? w - 1 : x;
+
+                const soundDb = this.device?.microphone?.sound_db ?? 20;
+                const dominantHz = this.device?.microphone?.dominant_hz ?? 500;
+                const peakDbfs = Math.abs(this.device?.microphone?.peak_dbfs ?? -30);
+
+                // Generate frequency band intensities
+                const bands = 64;
+                const dominantBand = Math.floor((dominantHz / 8000) * bands);
+
+                for (let b = 0; b < bands; b++) {
+                    const y = h - Math.floor((b / bands) * h) - Math.floor(h / bands);
+                    const bandH = Math.max(1, Math.floor(h / bands));
+
+                    // Base intensity from sound level
+                    let intensity = (soundDb / 100) * 0.3;
+
+                    // Boost near dominant frequency
+                    const distFromDominant = Math.abs(b - dominantBand);
+                    if (distFromDominant < 6) {
+                        intensity += (1 - distFromDominant / 6) * (soundDb / 80) * 0.7;
+                    }
+
+                    // Harmonics
+                    const harmonic2 = dominantBand * 2;
+                    const harmonic3 = dominantBand * 3;
+                    if (Math.abs(b - harmonic2) < 3) intensity += 0.15;
+                    if (Math.abs(b - harmonic3) < 2) intensity += 0.08;
+
+                    // Random noise
+                    intensity += (Math.random() - 0.3) * 0.08;
+                    intensity = Math.max(0, Math.min(1, intensity));
+
+                    // Color: dark green → bright green → yellow → white
+                    const r = intensity > 0.7 ? Math.floor((intensity - 0.7) / 0.3 * 200) : 0;
+                    const g = Math.floor(intensity * 220 + 10);
+                    const bVal = intensity > 0.85 ? Math.floor((intensity - 0.85) / 0.15 * 80) : 0;
+                    const a = Math.max(0.02, intensity * 0.95);
+
+                    ctx.fillStyle = `rgba(${r}, ${g}, ${bVal}, ${a})`;
+                    ctx.fillRect(drawX, y, 1, bandH);
+                }
+
+                // Thin time-cursor line
+                if (this.spectrogramColumn < w) {
+                    ctx.fillStyle = 'rgba(57,224,121,0.15)';
+                    ctx.fillRect(drawX + 1, 0, 1, h);
+                }
+
+                this.spectrogramColumn++;
+            },
+
+            // ──── Waveform ────
+            startWaveformAnimation() {
+                this.waveformTimer = setInterval(() => {
+                    if (this.paused) return;
+                    if (!this.device?.microphone) return;
+
+                    const soundDb = this.device.microphone.sound_db ?? 40;
+                    const peakDbfs = Math.abs(this.device.microphone.peak_dbfs ?? -30);
+                    const dominantHz = this.device.microphone.dominant_hz ?? 500;
+
+                    const baseHeight = Math.min(85, Math.max(8, soundDb * 1.1));
+                    const variance = Math.min(35, peakDbfs * 0.7);
+
+                    this.waveformBars = this.waveformBars.map((_, i) => {
+                        const t = Date.now() / 180;
+                        const phase1 = Math.sin(t + i * 0.25) * variance * 0.4;
+                        const phase2 = Math.sin(t * 1.7 + i * 0.15) * variance * 0.2;
+                        const noise = (Math.random() - 0.5) * variance * 0.3;
+                        return Math.max(3, Math.min(95, baseHeight + phase1 + phase2 + noise));
+                    });
+                }, 100);
+            },
+
+            // ──── API polling ────
+            async fetchSensor() {
+                try {
+                    const url = `${this.apiUrl}?api_key=${this.apiKey}`;
+                    const response = await fetch(url, {
+                        headers: { 'Accept': 'application/json' },
+                    });
+
+                    if (!response.ok) {
+                        this.error = `API returned ${response.status}`;
+                        this.connected = false;
+                        return;
+                    }
+
+                    const data = await response.json();
+                    if (data?.ok) {
+                        this.device = data;
+                        this.connected = true;
+                        this.error = null;
+                        this.lastUpdatedAt = new Date();
+                    } else {
+                        this.error = 'API returned ok=false';
+                        this.connected = false;
+                    }
+                } catch (e) {
+                    this.error = e.message || 'Network error';
+                    this.connected = false;
+                } finally {
+                    this.loading = false;
+                }
+            },
+        }));
+    });
+</script>
+
+<style>
+    .recording-pulse {
+        animation: pulse-recording 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse-recording {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+
+    /* dB meter gradients */
+    .db-meter-cool {
+        background: linear-gradient(to top, #064e1e, #39e079);
+    }
+    .db-meter-warm {
+        background: linear-gradient(to top, #064e1e, #39e079 50%, #facc15);
+    }
+    .db-meter-hot {
+        background: linear-gradient(to top, #064e1e, #39e079 40%, #facc15 70%, #ef4444);
+    }
+
+    /* Scan line */
+    .scanline-anim {
+        animation: scanline 4s linear infinite;
+    }
+    @keyframes scanline {
+        0%   { top: 10%; opacity: 0; }
+        10%  { opacity: 1; }
+        90%  { opacity: 1; }
+        100% { top: 90%; opacity: 0; }
+    }
+</style>
 </body>
 </html>

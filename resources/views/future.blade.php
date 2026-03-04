@@ -14,11 +14,10 @@
 <!-- Navigation -->
 <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-border-muted dark:border-white/10 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md px-10 py-3 sticky top-0 z-50">
     <div class="flex items-center gap-8">
-        <div class="flex items-center gap-3">
-            <div class="size-8 bg-primary rounded flex items-center justify-center text-background-dark">
-                <span class="material-symbols-outlined font-bold">query_stats</span>
+        <div class="flex items-center justify-center size-10 bg-primary rounded-lg text-background-dark font-black text-lg">
+                EST
             </div>
-            <h2 class="text-[#111813] dark:text-white text-xl font-bold leading-tight tracking-[-0.015em]">EST</h2>
+            <h2 class="text-[#111813] dark:text-white text-xl font-bold leading-tight tracking-tight">Eco System Translator</h2>
         </div>
         <nav class="hidden md:flex items-center gap-6">
             <a class="text-text-muted dark:text-gray-400 hover:text-primary transition-colors text-sm font-medium" href="{{ route('dashboard') }}">Dashboard</a>

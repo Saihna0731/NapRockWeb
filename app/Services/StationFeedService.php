@@ -39,15 +39,22 @@ class StationFeedService
         $enabled = (bool) config('services.python_api.enabled', false);
         $baseUrl = rtrim((string) config('services.python_api.base_url', ''), '/');
         $stationsPath = '/' . ltrim((string) config('services.python_api.stations_path', '/stations'), '/');
+        $apiKey = trim((string) config('services.python_api.api_key', ''));
 
         if (!$enabled || $baseUrl === '') {
             return [];
         }
 
         try {
-            $response = Http::acceptJson()
-                ->timeout(6)
-                ->get("{$baseUrl}{$stationsPath}");
+            $request = Http::acceptJson()
+                ->timeout(6);
+
+            $query = [];
+            if ($apiKey !== '') {
+                $query['api_key'] = $apiKey;
+            }
+
+            $response = $request->get("{$baseUrl}{$stationsPath}", $query);
 
             if (!$response->ok()) {
                 return [];
@@ -101,54 +108,123 @@ class StationFeedService
             return null;
         }
 
+        // ── Species / Bird detection ──
         $commonName = $this->pickString($row, [
+            'bird.species',
+            'bird.common_name',
             'ml.species.common_name',
             'detection.species.common_name',
-            'bird.common_name',
             'species_common_name',
             'species_name',
         ], 'Unknown species');
 
         $scientificName = $this->pickString($row, [
+            'bird.scientific_name',
             'ml.species.scientific_name',
             'detection.species.scientific_name',
-            'bird.scientific_name',
             'species_scientific_name',
         ]);
 
+        $imageUrl = $this->normalizeImageUrl($this->pickString($row, [
+            'bird.image_url',
+            'ml.species.image_url',
+            'detection.species.image_url',
+            'species_image_url',
+            'image_path',
+        ]));
+
+        // ── Top-K predictions ──
+        $topk = data_get($row, 'bird.topk');
+        $topkNormalized = [];
+        if (is_array($topk)) {
+            foreach (array_slice($topk, 0, 5) as $entry) {
+                if (!is_array($entry)) {
+                    continue;
+                }
+                $topkNormalized[] = [
+                    'species' => $this->pickString($entry, ['species', 'common_name'], ''),
+                    'scientific_name' => $this->pickString($entry, ['scientific_name'], ''),
+                    'confidence_pct' => $this->pickNumber($entry, ['confidence_pct']),
+                    'image_url' => $this->normalizeImageUrl($this->pickString($entry, ['image_url'], '')),
+                ];
+            }
+        }
+
+        // ── Eco trend ──
+        $ecoTrend = $this->pickString($row, ['eco.trend', 'ml.eco_trend'], 'stable');
+
         return [
             'id' => $id,
-            'label' => $this->pickString($row, ['label'], $id),
-            'area_label' => $this->pickString($row, ['area_label'], "Area {$id}"),
-            'zone' => strtolower($this->pickString($row, ['zone'], 'forest')),
-            'area' => $this->pickString($row, ['area'], 'Live API Station'),
+            'label' => $this->pickString($row, ['label', 'station.label'], $id),
+            'area_label' => $this->pickString($row, ['station.area_label', 'area_label'], "Station {$id}"),
+            'zone' => strtolower($this->pickString($row, ['station.zone', 'zone'], 'forest')),
+            'area' => $this->pickString($row, ['station.area', 'area'], 'Live Station'),
             'coordinates' => [
-                'lat' => $this->pickNumber($row, ['coordinates.lat', 'latitude']),
-                'lng' => $this->pickNumber($row, ['coordinates.lng', 'longitude']),
+                'lat' => $this->pickNumber($row, ['station.coordinates.lat', 'coordinates.lat', 'latitude']),
+                'lng' => $this->pickNumber($row, ['station.coordinates.lng', 'coordinates.lng', 'longitude']),
+            ],
+            'hardware' => [
+                'mcu' => $this->pickString($row, ['hardware.mcu'], 'ESP32'),
+                'mic' => $this->pickString($row, ['hardware.mic'], 'INMP441'),
+                'sensor' => $this->pickString($row, ['hardware.sensor'], ''),
             ],
             'telemetry' => [
-                'temperature_c' => $this->pickNumber($row, ['telemetry.temperature_c', 'temperature_c']),
-                'humidity_pct' => $this->pickNumber($row, ['telemetry.humidity_pct', 'humidity_pct']),
+                'temperature_c' => $this->pickNumber($row, ['environment.temperature_c', 'telemetry.temperature_c', 'temperature_c']),
+                'humidity_pct' => $this->pickNumber($row, ['environment.humidity_pct', 'telemetry.humidity_pct', 'humidity_pct']),
+                'pressure_hpa' => $this->pickNumber($row, ['environment.pressure_hpa']),
                 'battery_v' => $this->pickNumber($row, ['telemetry.battery_v', 'battery_v']),
-                'rssi_dbm' => $this->pickNumber($row, ['telemetry.rssi_dbm', 'rssi_dbm']),
-                'sound_db' => $this->pickNumber($row, ['telemetry.sound_db', 'sound_db']),
-                'dominant_hz' => $this->pickNumber($row, ['telemetry.dominant_hz', 'dominant_hz']),
-                'recorded_at' => $this->pickString($row, ['telemetry.recorded_at', 'recorded_at']),
+                'rssi_dbm' => $this->pickNumber($row, ['wifi.rssi', 'telemetry.rssi_dbm', 'rssi_dbm']),
+                'sound_db' => $this->pickNumber($row, ['microphone.sound_db', 'microphone.loudness_dbfs', 'telemetry.sound_db', 'sound_db']),
+                'dominant_hz' => $this->pickNumber($row, ['microphone.dominant_hz', 'telemetry.dominant_hz', 'dominant_hz']),
+                'peak_dbfs' => $this->pickNumber($row, ['microphone.peak_dbfs']),
+                'duration_sec' => $this->pickNumber($row, ['microphone.duration_sec']),
+                'recorded_at' => $this->pickString($row, ['ts', 'telemetry.recorded_at', 'recorded_at']),
+            ],
+            'wifi' => [
+                'ssid' => $this->pickString($row, ['wifi.ssid']),
+                'rssi' => $this->pickNumber($row, ['wifi.rssi']),
+                'ip' => $this->pickString($row, ['wifi.ip']),
             ],
             'ml' => [
-                'status' => $this->pickString($row, ['ml.status', 'detection.status', 'status'], 'Healthy'),
-                'eco_score' => $this->pickNumber($row, ['ml.eco_score', 'detection.eco_score', 'eco_score']),
-                'confidence_pct' => $this->pickNumber($row, ['ml.confidence_pct', 'detection.confidence_pct', 'confidence', 'confidence_pct']),
-                'activity_det_per_hr' => $this->pickNumber($row, ['ml.activity_det_per_hr', 'detection.activity_det_per_hr', 'activity_det_per_hr']),
+                'status' => $this->pickString($row, ['eco.status', 'ml.status', 'detection.status'], 'Healthy'),
+                'eco_score' => $this->pickNumber($row, ['eco.score', 'ml.eco_score', 'detection.eco_score', 'eco_score']),
+                'eco_trend' => $ecoTrend,
+                'confidence_pct' => $this->pickNumber($row, ['bird.confidence_pct', 'ml.confidence_pct', 'detection.confidence_pct', 'confidence_pct']),
+                'activity_det_per_hr' => $this->pickNumber($row, ['activity.detections_per_hr', 'ml.activity_det_per_hr', 'activity_det_per_hr']),
                 'species' => [
                     'common_name' => $commonName,
                     'scientific_name' => $scientificName,
-                    'image_url' => $this->pickString($row, ['ml.species.image_url', 'detection.species.image_url', 'bird.image_url', 'species_image_url']),
+                    'image_url' => $imageUrl,
                 ],
-                'recorded_at' => $this->pickString($row, ['ml.recorded_at', 'detection.recorded_at', 'recorded_at']),
+                'topk' => $topkNormalized,
+                'recorded_at' => $this->pickString($row, ['ts', 'ml.recorded_at', 'detection.recorded_at', 'recorded_at']),
             ],
-            'status' => strtolower($this->pickString($row, ['status'], 'online')),
+            'source' => $this->pickString($row, ['source'], 'api'),
+            'status' => 'online',
         ];
+    }
+
+    private function normalizeImageUrl(string $value): string
+    {
+        if ($value === '') {
+            return '';
+        }
+
+        if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) {
+            return $value;
+        }
+
+        if (!str_starts_with($value, '/')) {
+            return $value;
+        }
+
+        $baseUrl = rtrim((string) config('services.python_api.base_url', ''), '/');
+
+        if ($baseUrl === '') {
+            return $value;
+        }
+
+        return $baseUrl . $value;
     }
 
     private function pickString(array $source, array $paths, string $fallback = ''): string

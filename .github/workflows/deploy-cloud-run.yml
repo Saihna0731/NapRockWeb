@@ -26,6 +26,7 @@ jobs:
           GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           APP_KEY: ${{ secrets.APP_KEY }}
+          PYTHON_API_KEY: ${{ secrets.PYTHON_API_KEY }}
         run: |
           if [ -z "$GCP_CREDENTIALS_JSON" ]; then
             echo "Missing required secret: GCP_CREDENTIALS_JSON"
@@ -39,6 +40,11 @@ jobs:
 
           if [ -z "$APP_KEY" ]; then
             echo "Missing required secret: APP_KEY"
+            exit 1
+          fi
+
+          if [ -z "$PYTHON_API_KEY" ]; then
+            echo "Missing required secret: PYTHON_API_KEY"
             exit 1
           fi
 
@@ -57,8 +63,8 @@ jobs:
             --project "${{ secrets.GCP_PROJECT_ID }}" \
             --region "$REGION" \
             --allow-unauthenticated \
-            --set-env-vars APP_ENV=production,APP_DEBUG=false,LOG_CHANNEL=stderr,APP_URL=https://est-monitoring.online,SESSION_DRIVER=file,CACHE_STORE=file,QUEUE_CONNECTION=sync,PYTHON_API_ENABLED=false \
-            --set-env-vars APP_KEY="${{ secrets.APP_KEY }}"
+            --set-env-vars APP_ENV=production,APP_DEBUG=false,LOG_CHANNEL=stderr,APP_URL=https://est-monitoring.online,SESSION_DRIVER=file,CACHE_STORE=file,QUEUE_CONNECTION=sync,PYTHON_API_ENABLED=true,PYTHON_API_URL=https://bird-edge-api-910518834273.asia-east1.run.app,PYTHON_STATIONS_PATH=/api/v1/sensor/latest \
+            --set-env-vars APP_KEY="${{ secrets.APP_KEY }}",PYTHON_API_KEY="${{ secrets.PYTHON_API_KEY }}"
 
       - name: Show service URL
         run: |

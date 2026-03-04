@@ -11,7 +11,7 @@
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjVgcTOOYInsw7RMVgG2LqpS6xO309B9o&callback=Function.prototype" async defer></script>
+
 </head>
 <body
     x-data="dashboardPage({{ \Illuminate\Support\Js::from($stations ?? []) }})"
@@ -45,13 +45,6 @@
 </header>
 <div class="flex">
     <aside class="w-64 border-r border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-background-dark min-h-[calc(100vh-64px)] hidden xl:flex flex-col p-6 sticky top-16">
-        <div class="mb-8">
-            <h3 class="text-xs font-bold text-text-muted uppercase tracking-widest mb-4">Branding</h3>
-            <div class="flex flex-col gap-1 p-3 bg-primary/5 border border-primary/20 rounded-xl">
-                <p class="text-[#111813] dark:text-white font-bold text-sm">EST Translator</p>
-                <p class="text-[10px] text-text-muted">Global Eco-Monitoring</p>
-            </div>
-        </div>
         <div class="flex flex-col gap-2">
             <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-[#111813] dark:text-primary font-bold">
                 <span class="material-symbols-outlined">dashboard</span>
@@ -65,32 +58,9 @@
                 <span class="material-symbols-outlined">monitoring</span>
                 <span class="text-sm font-medium">Historical Trends</span>
             </a>
-            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted hover:bg-background-light dark:hover:bg-[#1a2e21]" href="{{ route('species-id') }}">
-                <span class="material-symbols-outlined">flutter_dash</span>
-                <span class="text-sm font-medium">Species ID</span>
-            </a>
-        </div>
-        <div class="mt-auto pt-6">
-            <button class="w-full bg-primary text-background-dark font-bold py-3 rounded-lg flex items-center justify-center gap-2 text-sm shadow-sm hover:opacity-90 transition-opacity" type="button">
-                <span class="material-symbols-outlined text-sm">download</span>
-                Export Report
-            </button>
         </div>
     </aside>
     <main class="flex-1 p-8 space-y-8 overflow-x-hidden">
-        <div class="flex flex-wrap justify-between items-end gap-6">
-            <div class="flex flex-col gap-2">
-                <h1 class="text-4xl font-black text-[#111813] dark:text-white leading-tight tracking-tight">Eco System Translator</h1>
-                <p class="text-text-muted text-lg font-medium">Visual bird species tracking and identification dashboard</p>
-            </div>
-            <div class="flex gap-3">
-                <div class="flex items-center gap-2 bg-white dark:bg-[#1a2e21] border border-border-muted dark:border-[#2a3a2e] px-4 py-2 rounded-lg">
-                    <span class="size-2 bg-primary rounded-full animate-pulse"></span>
-                    <span class="text-sm font-bold">Live Monitoring Active</span>
-                </div>
-            </div>
-        </div>
-
         {{-- ══ Zone Tab Bar ══ --}}
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center gap-1 bg-white dark:bg-[#1a2e21] rounded-xl border border-border-muted dark:border-[#2a3a2e] p-1.5 overflow-x-auto">
@@ -136,8 +106,8 @@
             <div class="col-span-12 xl:col-span-7">
                 <div class="bg-white dark:bg-[#1a2e21] p-2 rounded-xl border border-border-muted dark:border-[#2a3a2e] relative z-0 overflow-hidden" style="height:520px">
                     <div class="w-full h-full rounded-lg relative overflow-hidden">
-                        <div x-ref="googleMap" class="absolute inset-0"></div>
-                        <div class="absolute top-14 left-3 z-10 rounded-xl border border-border-muted dark:border-[#2a3a2e] bg-white/90 dark:bg-background-dark/80 backdrop-blur px-3 py-2">
+                        <div x-ref="leafletMap" class="absolute inset-0 z-0"></div>
+                        <div class="absolute top-98 left-3 z-10 rounded-xl border border-border-muted dark:border-[#2a3a2e] bg-white/90 dark:bg-background-dark/80 backdrop-blur px-3 py-2">
                             <p class="text-[10px] font-black uppercase tracking-widest text-text-muted">MAP</p>
                             <p class="text-xs font-bold" x-text="`${visibleStations().length} station(s)`"></p>
                         </div>
@@ -238,13 +208,29 @@
                                         </div>
                                         <div class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-background-dark/50 p-2 text-center">
                                             <p class="text-[9px] uppercase font-bold text-text-muted">Sound</p>
-                                            <p class="text-xs font-black mt-0.5"><span x-text="item.station?.telemetry?.sound_db ?? '—'"></span> dB</p>
+                                            <p class="text-xs font-black mt-0.5"><span x-text="item.station?.telemetry?.sound_db != null ? (Math.round(item.station.telemetry.sound_db * 10) / 10) : '—'"></span> dB</p>
                                         </div>
                                         <div class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-white dark:bg-background-dark/50 p-2 text-center">
                                             <p class="text-[9px] uppercase font-bold text-text-muted">Eco</p>
                                             <p class="text-xs font-black mt-0.5" x-text="item.station?.ml?.eco_score ?? '—'"></p>
                                         </div>
                                     </div>
+
+                                    {{-- Top-K predictions --}}
+                                    <template x-if="item.station?.ml?.topk?.length > 0">
+                                        <div class="mt-3">
+                                            <p class="text-[9px] uppercase tracking-widest font-bold text-text-muted mb-2">Top Predictions</p>
+                                            <div class="space-y-1">
+                                                <template x-for="(pred, pi) in (item.station?.ml?.topk ?? [])" :key="pi">
+                                                    <div class="flex items-center gap-2 text-[11px]">
+                                                        <img x-show="pred.image_url" :src="pred.image_url" class="size-5 rounded object-cover" />
+                                                        <span class="font-bold truncate flex-1" x-text="pred.species"></span>
+                                                        <span class="font-black tabular-nums text-text-muted" x-text="(pred.confidence_pct ?? 0) + '%'"></span>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
 
                                     {{-- Activity + confidence bar --}}
                                     <div class="mt-3 space-y-2">
@@ -351,7 +337,7 @@
                     <span>Now</span>
                 </div>
                 {{-- Hardware info row --}}
-                <div class="mt-4 grid grid-cols-3 gap-2 border-t border-border-muted dark:border-[#2a3a2e] pt-4">
+                <div class="mt-4 grid grid-cols-4 gap-2 border-t border-border-muted dark:border-[#2a3a2e] pt-4">
                     <div class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 p-2.5">
                         <p class="text-[9px] uppercase tracking-widest font-bold text-text-muted">MCU</p>
                         <p class="text-xs font-bold mt-0.5" x-text="selectedStation?.hardware?.mcu ?? '—'"></p>
@@ -359,6 +345,10 @@
                     <div class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 p-2.5">
                         <p class="text-[9px] uppercase tracking-widest font-bold text-text-muted">Mic</p>
                         <p class="text-xs font-bold mt-0.5" x-text="selectedStation?.hardware?.mic ?? '—'"></p>
+                    </div>
+                    <div class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 p-2.5">
+                        <p class="text-[9px] uppercase tracking-widest font-bold text-text-muted">Sensor</p>
+                        <p class="text-xs font-bold mt-0.5" x-text="selectedStation?.hardware?.sensor || '—'"></p>
                     </div>
                     <div class="rounded-lg border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 p-2.5">
                         <p class="text-[9px] uppercase tracking-widest font-bold text-text-muted">Temp</p>
@@ -379,7 +369,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 w-full mt-5 gap-3 border-t border-border-muted dark:border-[#2a3a2e] pt-5">
+                <div class="grid grid-cols-3 w-full mt-5 gap-3 border-t border-border-muted dark:border-[#2a3a2e] pt-5">
                     <div class="text-center">
                         <p class="text-[9px] text-text-muted uppercase font-bold">Activity</p>
                         <p class="text-base font-black"><span x-text="selectedStation?.ml?.activity_det_per_hr ?? '—'"></span>/hr</p>
@@ -389,6 +379,21 @@
                         <p class="text-xs font-black mt-1"
                            :class="(selectedStation?.ml?.status === 'Healthy') ? 'text-primary' : 'text-red-500'"
                            x-text="selectedStation?.ml?.status ?? '—'"></p>
+                    </div>
+                    <div class="text-center border-l border-border-muted dark:border-[#2a3a2e]">
+                        <p class="text-[9px] text-text-muted uppercase font-bold">Trend</p>
+                        <p class="text-xs font-black mt-1" x-text="selectedStation?.ml?.eco_trend ?? '—'"></p>
+                    </div>
+                </div>
+                {{-- Pressure & Wi-Fi --}}
+                <div class="grid grid-cols-2 w-full mt-3 gap-3 border-t border-border-muted dark:border-[#2a3a2e] pt-3">
+                    <div class="text-center">
+                        <p class="text-[9px] text-text-muted uppercase font-bold">Pressure</p>
+                        <p class="text-xs font-black mt-0.5"><span x-text="selectedStation?.telemetry?.pressure_hpa ?? '—'"></span> hPa</p>
+                    </div>
+                    <div class="text-center border-l border-border-muted dark:border-[#2a3a2e]">
+                        <p class="text-[9px] text-text-muted uppercase font-bold">Wi-Fi</p>
+                        <p class="text-xs font-black mt-0.5" x-text="selectedStation?.wifi?.ssid ? (selectedStation.wifi.ssid + ' (' + selectedStation.wifi.rssi + ' dBm)') : '—'"></p>
                     </div>
                 </div>
             </div>
@@ -510,7 +515,7 @@
             <div class="flex flex-wrap items-end justify-between gap-4">
                 <div>
                     <h2 class="text-2xl font-black">Future Predict</h2>
-                    <p class="text-text-muted text-sm font-medium">Dashboard доош гүйлгэхэд харагдах (full page: Trends)</p>
+                    <p class="text-text-muted text-sm font-medium">Predictive insights based on live sensor data (full page: Trends)</p>
                 </div>
                 <a class="px-4 py-2 rounded-lg bg-primary text-background-dark text-xs font-black hover:opacity-90" href="{{ route('future') }}">Open Full Future Page</a>
             </div>
@@ -534,10 +539,10 @@
                 </div>
                 <div class="rounded-2xl border border-border-muted dark:border-[#2a3a2e] bg-background-light dark:bg-background-dark/40 p-5">
                     <p class="text-[10px] uppercase tracking-widest font-black text-text-muted">Action</p>
-                    <p class="text-xs text-text-muted mt-2">ESP32 / INMP441 өгөгдөл (sound_db, dominant_hz, temperature) тогтмол ирэх тусам энэ хэсгийн дүгнэлт илүү нарийвчлалтай болно.</p>
+                    <p class="text-xs text-text-muted mt-2">As more ESP32/INMP441 data streams in (sound_db, dominant_hz, temperature), these predictions become increasingly accurate.</p>
                     <div class="mt-4 flex items-center gap-2">
                         <span class="material-symbols-outlined text-primary">settings</span>
-                        <p class="text-xs font-bold">Tip: `recorded_at`-г илгээвэл хамгийн идэвхтэй цаг бодно.</p>
+                        <p class="text-xs font-bold">Tip: Include `recorded_at` timestamps to compute peak activity hours.</p>
                     </div>
                 </div>
             </div>
@@ -586,7 +591,7 @@
 
             init() {
                 this.lastUpdatedAt = new Date();
-                this.$nextTick(() => this.initGoogleMap());
+                this.$nextTick(() => this.initLeafletMap());
                 this.startPolling();
                 this.$watch('selectedStation', () => this.syncRealtimeAudioListener());
 
@@ -973,7 +978,7 @@
 
             setZone(zone) {
                 this.zoneFilter = zone;
-                this.refreshGoogleMarkers(true);
+                this.refreshLeafletMarkers(true);
             },
 
             visibleStations() {
@@ -1040,20 +1045,31 @@
 
             speciesListItems() {
                 if (this.selectedStation) {
-                    // Show all stations in same area as selected device
-                    const areaStns = this.areaStations();
-                    if (areaStns.length) {
-                        return areaStns.map((st) => ({
-                            key: this.stationId(st) || String(Math.random()),
-                            station: st,
-                            commonName: st?.ml?.species?.common_name || 'Unknown species',
-                            scientificName: st?.ml?.species?.scientific_name || '',
-                            imageUrl: st?.ml?.species?.image_url || '',
-                            status: st?.ml?.status || '—',
-                            confidence: Math.round(st?.ml?.confidence_pct ?? 0),
-                            stationLabel: st?.label || st?.id || '',
+                    // Show ALL detected species from the selected station's topk list
+                    const topk = this.selectedStation?.ml?.topk;
+                    if (Array.isArray(topk) && topk.length) {
+                        return topk.map((pred, idx) => ({
+                            key: `${this.stationId(this.selectedStation)}-topk-${idx}`,
+                            station: this.selectedStation,
+                            commonName: pred.species || 'Unknown species',
+                            scientificName: pred.scientific_name || '',
+                            imageUrl: pred.image_url || '',
+                            status: this.selectedStation?.ml?.status || '—',
+                            confidence: Math.round(pred.confidence_pct ?? 0),
+                            stationLabel: this.selectedStation?.label || this.selectedStation?.id || '',
                         }));
                     }
+                    // Fallback: single top species if topk not available
+                    return [{
+                        key: this.stationId(this.selectedStation) || String(Math.random()),
+                        station: this.selectedStation,
+                        commonName: this.selectedStation?.ml?.species?.common_name || 'Unknown species',
+                        scientificName: this.selectedStation?.ml?.species?.scientific_name || '',
+                        imageUrl: this.selectedStation?.ml?.species?.image_url || '',
+                        status: this.selectedStation?.ml?.status || '—',
+                        confidence: Math.round(this.selectedStation?.ml?.confidence_pct ?? 0),
+                        stationLabel: this.selectedStation?.label || this.selectedStation?.id || '',
+                    }];
                 }
                 // Default: top species per area from all visible stations
                 return this.topSpeciesByArea().map((area) => ({
@@ -1097,7 +1113,7 @@
                         this.applyRealtimeEnrichment();
                         this.lastUpdatedAt = new Date();
 
-                        this.refreshGoogleMarkers(false);
+                        this.refreshLeafletMarkers(false);
 
                         if (this.selectedStation?.id) {
                             const selectedId = this.stationId(this.selectedStation);
@@ -1176,21 +1192,25 @@
                 return {
                     id: deviceId,
                     label: latest?.label || deviceId,
-                    area_label: latest?.area_label || `Mock ${deviceId}`,
-                    zone: latest?.zone || 'forest',
-                    area: latest?.area || 'Mock ESP32 Area',
+                    area_label: latest?.area_label || deviceId,
+                    zone: latest?.zone || 'unknown',
+                    area: latest?.area || 'ESP32 Area',
                     coordinates: {
                         lat: Number.isFinite(lat) ? lat : fallback.lat,
                         lng: Number.isFinite(lng) ? lng : fallback.lng,
                     },
                     hardware: {
-                        mcu: 'ESP32',
-                        mic: 'INMP441',
+                        mcu: latest?.hardware?.mcu || 'ESP32',
+                        mic: latest?.hardware?.mic || 'INMP441',
+                        sensor: latest?.hardware?.sensor || null,
                     },
                     telemetry: {
                         temperature_c: Number(latest?.temperature_c ?? latest?.telemetry?.temperature_c ?? 0),
                         sound_db: Number(latest?.sound_db ?? latest?.telemetry?.sound_db ?? 0),
                         dominant_hz: Number(latest?.dominant_hz ?? latest?.telemetry?.dominant_hz ?? 0),
+                        pressure_hpa: Number(latest?.pressure_hpa ?? latest?.telemetry?.pressure_hpa ?? 0) || null,
+                        peak_dbfs: Number(latest?.peak_dbfs ?? latest?.telemetry?.peak_dbfs ?? 0) || null,
+                        duration_sec: Number(latest?.duration_sec ?? latest?.telemetry?.duration_sec ?? 0) || null,
                         recorded_at: latest?.recorded_at || new Date().toISOString(),
                     },
                     baseline: {
@@ -1199,17 +1219,20 @@
                         activity_det_per_hr: 65,
                     },
                     ml: {
-                        status: 'Healthy',
-                        eco_score: 82,
-                        confidence_pct: 89,
-                        activity_det_per_hr: 72,
+                        status: latest?.ml?.status || 'Unknown',
+                        eco_score: Number(latest?.ml?.eco_score ?? 0),
+                        eco_trend: latest?.ml?.eco_trend || null,
+                        confidence_pct: Number(latest?.ml?.confidence_pct ?? 0),
+                        activity_det_per_hr: Number(latest?.ml?.activity_det_per_hr ?? 0),
                         species: {
-                            common_name: 'Mock Bird',
-                            scientific_name: 'Aves mockus',
-                            image_url: '',
+                            common_name: latest?.ml?.species?.common_name || 'Unknown',
+                            scientific_name: latest?.ml?.species?.scientific_name || '',
+                            image_url: latest?.ml?.species?.image_url || '',
                         },
+                        topk: latest?.ml?.topk || [],
                         recorded_at: latest?.recorded_at || new Date().toISOString(),
                     },
+                    wifi: latest?.wifi || null,
                     status: 'online',
                 };
             },
@@ -1265,7 +1288,7 @@
 
                 const timeoutPromise = new Promise((_, reject) => {
                     timerId = setTimeout(() => {
-                        reject(new Error(`${label} timeout (${Math.round(timeoutMs / 1000)}s). Firebase URL / Rules шалгана уу.`));
+                        reject(new Error(`${label} timeout (${Math.round(timeoutMs / 1000)}s). Check Firebase URL / Rules.`));
                     }, timeoutMs);
                 });
 
@@ -1280,7 +1303,7 @@
                 const handles = this.getFirebaseHandles();
                 if (!handles) {
                     this.firebaseStatus = 'error';
-                    this.firebaseMessage = 'Firebase config дутуу байна. `.env` дээр VITE_FIREBASE_* утгуудыг шалгана уу.';
+                    this.firebaseMessage = 'Firebase config missing. Check VITE_FIREBASE_* values in .env file.';
                     return;
                 }
 
@@ -1300,7 +1323,7 @@
                     const snap = await this.withTimeout(handles.get(pingRef), 'Test read');
 
                     if (!snap.exists()) {
-                        throw new Error('healthcheck өгөгдөл олдсонгүй');
+                        throw new Error('Healthcheck data not found');
                     }
 
                     this.firebaseStatus = 'connected';
@@ -1344,7 +1367,7 @@
                 const handles = this.getFirebaseHandles();
                 if (!handles) {
                     this.firebaseStatus = 'error';
-                    this.firebaseMessage = 'Firebase config дутуу байна. `.env` дээр VITE_FIREBASE_* утгуудыг шалгана уу.';
+                    this.firebaseMessage = 'Firebase config missing. Check VITE_FIREBASE_* values in .env file.';
                     return;
                 }
 
@@ -1361,7 +1384,7 @@
 
                     this.mockLatest = payload;
                     this.stations = await this.mergeWithFirebaseStations(this.stations);
-                    this.refreshGoogleMarkers(true);
+                    this.refreshLeafletMarkers(true);
                     this.firebaseStatus = 'connected';
                     this.firebaseMessage = `Saved mock data for ${payload.device_id}`;
                 } catch (error) {
@@ -1376,7 +1399,7 @@
                 const handles = this.getFirebaseHandles();
                 if (!handles) {
                     this.firebaseStatus = 'error';
-                    this.firebaseMessage = 'Firebase config дутуу байна. `.env` дээр VITE_FIREBASE_* утгуудыг шалгана уу.';
+                    this.firebaseMessage = 'Firebase config missing. Check VITE_FIREBASE_* values in .env file.';
                     return;
                 }
 
@@ -1401,7 +1424,7 @@
                     if (this.mockLatest?.sound_db != null) this.mockSoundDb = Number(this.mockLatest.sound_db);
 
                     this.stations = await this.mergeWithFirebaseStations(this.stations);
-                    this.refreshGoogleMarkers(true);
+                    this.refreshLeafletMarkers(true);
                     this.firebaseStatus = 'connected';
                     this.firebaseMessage = `Loaded latest data for ${deviceId}`;
                 } catch (error) {
@@ -1412,89 +1435,72 @@
                 }
             },
 
-            initGoogleMap() {
-                if (!window.google?.maps || !this.$refs.googleMap) return;
+            initLeafletMap() {
+                if (!window.L || !this.$refs.leafletMap) return;
                 if (this.map) return;
 
-                this.map = new google.maps.Map(this.$refs.googleMap, {
+                this.map = L.map(this.$refs.leafletMap, {
+                    center: [47.9, 106.9],
                     zoom: 4,
-                    center: { lat: 0, lng: 0 },
-                    mapTypeId: 'terrain',
-                    mapTypeControl: true,
-                    streetViewControl: false,
-                    fullscreenControl: true,
                     zoomControl: true,
-                    styles: [
-                        { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-                        { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-                    ],
+                    attributionControl: false,
                 });
 
-                this.markerLayer = []; // array of google.maps markers
-                this._infoWindow = new google.maps.InfoWindow();
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                }).addTo(this.map);
 
-                this.refreshGoogleMarkers(true);
+                L.control.attribution({ position: 'bottomright', prefix: false })
+                    .addAttribution('&copy; <a href="https://openstreetmap.org">OSM</a>')
+                    .addTo(this.map);
+
+                this.markerLayer = L.layerGroup().addTo(this.map);
+                this.refreshLeafletMarkers(true);
             },
 
-            refreshGoogleMarkers(fit) {
-                if (!this.map || !window.google?.maps) return;
+            refreshLeafletMarkers(fit) {
+                if (!this.map || !window.L) return;
 
-                // clear old markers
-                if (Array.isArray(this.markerLayer)) {
-                    this.markerLayer.forEach(m => m.setMap(null));
-                }
-                this.markerLayer = [];
+                this.markerLayer.clearLayers();
 
                 const visible = this.visibleStations();
-                const bounds = new google.maps.LatLngBounds();
-                let hasPoints = false;
+                const coords = [];
 
                 visible.forEach((station, idx) => {
                     const lat = station?.coordinates?.lat;
                     const lng = station?.coordinates?.lng;
                     if (lat == null || lng == null) return;
 
-                    const pos = { lat, lng };
                     const isHealthy = station?.ml?.status === 'Healthy';
                     const bg = isHealthy ? '#39e079' : '#ef4444';
 
-                    const marker = new google.maps.Marker({
-                        position: pos,
-                        map: this.map,
-                        icon: {
-                            url: `data:image/svg+xml,${encodeURIComponent(
-                                `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="14" fill="${bg}" stroke="white" stroke-width="2.5"/><text x="16" y="21" text-anchor="middle" font-size="12" font-weight="800" fill="white" font-family="sans-serif">${idx + 1}</text></svg>`
-                            )}`,
-                            scaledSize: new google.maps.Size(32, 32),
-                            anchor: new google.maps.Point(16, 16),
-                        },
-                        title: `${station.label ?? station.id}: ${station.id}`,
+                    const icon = L.divIcon({
+                        className: '',
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 16],
+                        html: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="14" fill="${bg}" stroke="white" stroke-width="2.5"/><text x="16" y="21" text-anchor="middle" font-size="12" font-weight="800" fill="white" font-family="sans-serif">${idx + 1}</text></svg>`,
                     });
 
-                    marker.addListener('click', () => {
-                        this.openStation(station);
-                        this._infoWindow.setContent(
-                            `<div style="font-family:inherit;font-size:12px;font-weight:700;line-height:1.5;padding:2px 0;">`
-                            + `<div>${station.label ?? station.id}: ${station.id}</div>`
-                            + `<div style="font-weight:400;font-style:italic">${station?.ml?.species?.common_name ?? 'Unknown'}</div>`
-                            + `<div style="font-weight:400">${station?.ml?.confidence_pct ?? 0}% · ${station?.ml?.status ?? '—'}</div>`
-                            + `</div>`
-                        );
-                        this._infoWindow.open(this.map, marker);
-                    });
+                    const marker = L.marker([lat, lng], { icon, title: `${station.label ?? station.id}: ${station.id}` });
 
-                    this.markerLayer.push(marker);
-                    bounds.extend(pos);
-                    hasPoints = true;
+                    marker.bindPopup(
+                        `<div style="font-family:inherit;font-size:12px;font-weight:700;line-height:1.5;padding:2px 0;">`
+                        + `<div>${station.label ?? station.id}: ${station.id}</div>`
+                        + `<div style="font-weight:400;font-style:italic">${station?.ml?.species?.common_name ?? 'Unknown'}</div>`
+                        + `<div style="font-weight:400">${station?.ml?.confidence_pct ?? 0}% · ${station?.ml?.status ?? '—'}</div>`
+                        + `</div>`,
+                        { closeButton: false, className: 'est-popup' }
+                    );
+
+                    marker.on('click', () => this.openStation(station));
+                    this.markerLayer.addLayer(marker);
+                    coords.push([lat, lng]);
                 });
 
-                if (fit && hasPoints) {
-                    this.map.fitBounds(bounds, { top: 24, right: 24, bottom: 24, left: 24 });
-                }
-
-                if (fit && !hasPoints) {
-                    this.map.setCenter({ lat: 0, lng: 0 });
-                    this.map.setZoom(2);
+                if (fit && coords.length) {
+                    this.map.fitBounds(coords, { padding: [24, 24], maxZoom: 12 });
+                } else if (fit) {
+                    this.map.setView([0, 0], 2);
                 }
             },
 
@@ -1571,28 +1577,28 @@
                 const soundBase = Number(station?.baseline?.sound_db);
                 if (Number.isFinite(sound) && Number.isFinite(soundBase)) {
                     const delta = sound - soundBase;
-                    if (delta <= -8) lines.push(`Шувууны дууны хүч хэвийнээс бага байна (${Math.round(delta)} dB).`);
-                    if (delta >= 8) lines.push(`Шувууны дууны хүч хэвийнээс өндөр байна (+${Math.round(delta)} dB).`);
+                    if (delta <= -8) lines.push(`Sound level below baseline (${Math.round(delta)} dB).`);
+                    if (delta >= 8) lines.push(`Sound level above baseline (+${Math.round(delta)} dB).`);
                 }
 
                 const temp = Number(station?.telemetry?.temperature_c);
                 const tempBase = Number(station?.baseline?.temperature_c);
                 if (Number.isFinite(temp) && Number.isFinite(tempBase)) {
                     const delta = temp - tempBase;
-                    if (delta >= 2.0) lines.push(`Температур хэвийнээс өндөр байна (+${Math.round(delta * 10) / 10}°C).`);
-                    if (delta <= -2.0) lines.push(`Температур хэвийнээс бага байна (${Math.round(delta * 10) / 10}°C).`);
+                    if (delta >= 2.0) lines.push(`Temperature above baseline (+${Math.round(delta * 10) / 10}°C).`);
+                    if (delta <= -2.0) lines.push(`Temperature below baseline (${Math.round(delta * 10) / 10}°C).`);
                 }
 
                 const eco = Number(station?.ml?.eco_score);
-                if (Number.isFinite(eco) && eco < 70) lines.push('Eco-score буурсан (стресс/орчны өөрчлөлт байж болно).');
+                if (Number.isFinite(eco) && eco < 70) lines.push('Eco-score declined — possible stress or environmental shifts.');
 
                 const rssi = Number(station?.telemetry?.rssi_dbm);
-                if (Number.isFinite(rssi) && rssi < -75) lines.push('Сүлжээ сул (RSSI бага) — өгөгдөл тасалдах магадлалтай.');
+                if (Number.isFinite(rssi) && rssi < -75) lines.push('Weak signal (low RSSI) — data may be intermittent.');
 
                 const batt = Number(station?.telemetry?.battery_v);
-                if (Number.isFinite(batt) && batt < 3.6) lines.push('Battery бага — мэдрэгчийн тогтвортой байдалд нөлөөлнө.');
+                if (Number.isFinite(batt) && batt < 3.6) lines.push('Low battery — sensor stability may be affected.');
 
-                if (!lines.length) lines.push('Одоогийн өгөгдлөөр томоохон асуудал илрээгүй.');
+                if (!lines.length) lines.push('No significant issues detected based on current data.');
                 return lines;
             },
 
@@ -1605,12 +1611,12 @@
                 const birds = this.areaBirds().map((b) => b.commonName).slice(0, 4);
 
                 const lines = [];
-                lines.push(`Энэ бүсэд Healthy: ${healthyCount}, Warning: ${warningCount}.`);
-                if (birds.length) lines.push(`Илэрсэн шувууд: ${birds.join(', ')}.`);
+                lines.push(`This zone: Healthy: ${healthyCount}, Warning: ${warningCount}.`);
+                if (birds.length) lines.push(`Detected species: ${birds.join(', ')}.`);
 
                 const deltas = this.areaDeltaLabel();
-                if (deltas !== '—') lines.push(`Хэвийн хэмжээнээс өөрчлөлт: ${deltas}.`);
-                lines.push('Дүгнэлт нь сүүлийн live telemetry/AI detection дээр тулгуурлана.');
+                if (deltas !== '—') lines.push(`Deviation from baseline: ${deltas}.`);
+                lines.push('Analysis is based on the latest live telemetry & AI detection data.');
                 return lines;
             },
 
@@ -1619,15 +1625,15 @@
                 if (audio.available) {
                     if ((audio.norm?.event_rate ?? 0) > 0.55 && (audio.norm?.avg_loudness ?? 0) > 0.45) {
                         return {
-                            title: 'Идэвхжил өсөх төлөв',
-                            detail: `Audio урсгал тогтвортой (avg ${Math.round(audio.avg_loudness_dbfs ?? 0)} dBFS, rate ${Math.round(audio.event_rate_per_min ?? 0)}/min).`,
+                            title: 'Rising Activity',
+                            detail: `Audio stream stable (avg ${Math.round(audio.avg_loudness_dbfs ?? 0)} dBFS, rate ${Math.round(audio.event_rate_per_min ?? 0)}/min).`,
                         };
                     }
 
                     if ((audio.norm?.event_rate ?? 0) < 0.2 && (audio.norm?.avg_loudness ?? 1) < 0.35) {
                         return {
-                            title: 'Нам гүм төлөв',
-                            detail: `Realtime дуу нам (avg ${Math.round(audio.avg_loudness_dbfs ?? 0)} dBFS) — ажиглалтыг үргэлжлүүлнэ.`,
+                            title: 'Quiet Period',
+                            detail: `Realtime audio quiet (avg ${Math.round(audio.avg_loudness_dbfs ?? 0)} dBFS) — continuing observation.`,
                         };
                     }
                 }
@@ -1638,18 +1644,18 @@
                     : 0;
 
                 if (!stations.length) {
-                    return { title: 'No live stations', detail: 'API-аас станцын өгөгдөл ирээгүй байна.' };
+                    return { title: 'No Live Stations', detail: 'No station data received from API.' };
                 }
 
                 if (avgEco >= 80) {
-                    return { title: 'Тогтвортой 24 цаг', detail: `Дундаж eco-score ~${avgEco}. Идэвхжил хэвийн түвшинд хадгалагдана.` };
+                    return { title: 'Stable 24h Outlook', detail: `Avg eco-score ~${avgEco}. Activity expected to remain at normal levels.` };
                 }
 
                 if (avgEco >= 65) {
-                    return { title: 'Дунд эрсдэл', detail: `Дундаж eco-score ~${avgEco}. Температур/дууны хэлбэлзэл нэмэгдэх магадлалтай.` };
+                    return { title: 'Moderate Risk', detail: `Avg eco-score ~${avgEco}. Temperature/sound fluctuations may increase.` };
                 }
 
-                return { title: 'Анхаарах шаардлагатай', detail: `Дундаж eco-score ~${avgEco}. Орчны стресс/идэвхжил бууралт ажиглагдаж болзошгүй.` };
+                return { title: 'Attention Required', detail: `Avg eco-score ~${avgEco}. Environmental stress or declining activity may be observed.` };
             },
 
             futureDrivers() {
@@ -1668,23 +1674,23 @@
                 }
 
                 const warnings = stations.filter((s) => s?.ml?.status === 'Warning').length;
-                if (warnings) drivers.push(`Warning статус: ${warnings} станц.`);
+                if (warnings) drivers.push(`Warning status: ${warnings} station(s).`);
 
                 const lowSound = stations.filter((s) => {
                     const sound = Number(s?.telemetry?.sound_db);
                     const base = Number(s?.baseline?.sound_db);
                     return Number.isFinite(sound) && Number.isFinite(base) && (sound - base) <= -8;
                 }).length;
-                if (lowSound) drivers.push(`Хэвийнээс сул дуу: ${lowSound} станц.`);
+                if (lowSound) drivers.push(`Sound below baseline: ${lowSound} station(s).`);
 
                 const highTemp = stations.filter((s) => {
                     const t = Number(s?.telemetry?.temperature_c);
                     const base = Number(s?.baseline?.temperature_c);
                     return Number.isFinite(t) && Number.isFinite(base) && (t - base) >= 2;
                 }).length;
-                if (highTemp) drivers.push(`Хэвийнээс өндөр температур: ${highTemp} станц.`);
+                if (highTemp) drivers.push(`Temperature above baseline: ${highTemp} station(s).`);
 
-                if (!drivers.length) drivers.push('Одоогийн өгөгдлөөр хүчтэй эрсдэл илрээгүй.');
+                if (!drivers.length) drivers.push('No significant risk detected based on current data.');
                 return drivers.slice(0, 4);
             },
         }));
