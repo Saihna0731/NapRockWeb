@@ -134,18 +134,26 @@
                     {{-- Panel header --}}
                     <div class="px-5 py-4 border-b border-border-muted dark:border-[#2a3a2e] flex items-center justify-between shrink-0">
                         <div>
-                            <h3 class="text-sm font-black" x-text="selectedStation ? 'Nearby Birds' : 'Species'"></h3>
+                            <h3 class="text-sm font-black" x-text="selectedStation ? 'Nearby Birds' : 'Live Species Detection'"></h3>
                             <p class="text-[10px] text-text-muted mt-0.5"
-                               x-text="selectedStation ? ('Near · ' + (selectedStation.label ?? selectedStation.id)) : 'All visible stations'"></p>
+                               x-text="selectedStation ? ('Near · ' + (selectedStation.label ?? selectedStation.id)) : (directDevice?.device_id ? ('Realtime · ' + directDevice.device_id) : 'All visible stations')"></p>
                         </div>
-                        <a href="{{ route('live') }}"
-                           class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#111813] dark:bg-primary text-white dark:text-background-dark text-xs font-black hover:opacity-80 transition-opacity">
-                            <span class="relative flex size-2">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary dark:bg-background-dark opacity-75"></span>
-                                <span class="relative inline-flex rounded-full size-2 bg-primary dark:bg-background-dark"></span>
-                            </span>
-                            Live
-                        </a>
+                        <div class="flex items-center gap-2">
+                            <template x-if="directDevice && !selectedStation">
+                                <span class="flex items-center gap-1.5 text-[10px] font-bold text-primary">
+                                    <span class="relative flex size-1.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span><span class="relative inline-flex rounded-full size-1.5 bg-primary"></span></span>
+                                    LIVE
+                                </span>
+                            </template>
+                            <a href="{{ route('live') }}"
+                               class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#111813] dark:bg-primary text-white dark:text-background-dark text-xs font-black hover:opacity-80 transition-opacity">
+                                <span class="relative flex size-2">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary dark:bg-background-dark opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full size-2 bg-primary dark:bg-background-dark"></span>
+                                </span>
+                                Live
+                            </a>
+                        </div>
                     </div>
                     {{-- Scrollable accordion list --}}
                     <div class="flex-1 overflow-y-auto divide-y divide-border-muted dark:divide-[#2a3a2e]">
@@ -566,16 +574,11 @@
             map: null,
             markerLayer: null,
 
-            firebaseStatus: 'idle',
-            firebaseBusy: false,
-            firebaseMessage: 'Ready to test Firebase connection.',
-            firebaseAutoSyncEnabled: true,
-            mockDeviceId: 'esp32-001',
-            mockSoundDb: 61,
-            mockTemperatureC: 27.4,
-            mockLatitude: -3.32,
-            mockLongitude: -62.02,
-            mockLatest: null,
+            // Direct Python API for realtime species
+            directApiUrl: 'https://bird-edge-api-910518834273.asia-east1.run.app/api/v1/sensor/latest',
+            directApiKey: 'birdedge_KfBfwrtXzd7IEeizQLc-iK9EVaJYzp1aJq_AK6p-qdU',
+            directDevice: null,
+            directPollTimer: null,
 
             realtimeListenerDeviceId: null,
             realtimeListenerStartedAt: null,
@@ -593,18 +596,13 @@
                 this.lastUpdatedAt = new Date();
                 this.$nextTick(() => this.initLeafletMap());
                 this.startPolling();
+                this.startDirectApiPolling();
                 this.$watch('selectedStation', () => this.syncRealtimeAudioListener());
 
                 window.addEventListener('beforeunload', () => {
                     this.clearRealtimeAudioSubscriptions();
+                    if (this.directPollTimer) clearInterval(this.directPollTimer);
                 });
-            },
-
-            firebaseStatusLabel() {
-                if (this.firebaseStatus === 'connected') return 'Firebase Connected';
-                if (this.firebaseStatus === 'error') return 'Firebase Error';
-                if (this.firebaseStatus === 'testing') return 'Testing...';
-                return 'Not Tested';
             },
 
             get lastUpdatedLabel() {
@@ -1071,7 +1069,22 @@
                         stationLabel: this.selectedStation?.label || this.selectedStation?.id || '',
                     }];
                 }
-                // Default: top species per area from all visible stations
+
+                // Realtime: show direct API topk predictions (like Live Listening)
+                if (this.directDevice?.bird?.topk?.length) {
+                    return this.directDevice.bird.topk.map((pred, idx) => ({
+                        key: `direct-topk-${idx}-${pred.species}`,
+                        station: null,
+                        commonName: pred.species || 'Unknown species',
+                        scientificName: pred.scientific_name || '',
+                        imageUrl: pred.image_url || '',
+                        status: this.directDevice?.eco?.status || '—',
+                        confidence: Math.round(pred.confidence_pct ?? 0),
+                        stationLabel: this.directDevice?.device_id || 'Live Sensor',
+                    }));
+                }
+
+                // Fallback: top species per area from all visible stations
                 return this.topSpeciesByArea().map((area) => ({
                     key: area.key,
                     station: area.station,
@@ -1109,7 +1122,7 @@
                     const payload = await response.json();
                     const stations = payload?.stations;
                     if (Array.isArray(stations)) {
-                        this.stations = await this.mergeWithFirebaseStations(stations);
+                        this.stations = this.uniqueStations(stations);
                         this.applyRealtimeEnrichment();
                         this.lastUpdatedAt = new Date();
 
@@ -1125,6 +1138,26 @@
                     }
                 } catch (e) {
                     // ignore transient network errors
+                }
+            },
+
+            // ──── Direct Python API polling (realtime species) ────
+            startDirectApiPolling() {
+                this.fetchDirectApi();
+                this.directPollTimer = setInterval(() => this.fetchDirectApi(), 3000);
+            },
+
+            async fetchDirectApi() {
+                try {
+                    const url = `${this.directApiUrl}?api_key=${this.directApiKey}`;
+                    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    if (data?.ok) {
+                        this.directDevice = data;
+                    }
+                } catch (e) {
+                    // ignore
                 }
             },
 
@@ -1176,96 +1209,6 @@
                 return Array.from(byId.values());
             },
 
-            defaultMockCoordinates(deviceId) {
-                const seed = String(deviceId || 'esp32').split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-                return {
-                    lat: -3.2 - ((seed % 40) / 100),
-                    lng: -62.0 + ((seed % 50) / 100),
-                };
-            },
-
-            createStationFromMock(deviceId, latest) {
-                const fallback = this.defaultMockCoordinates(deviceId);
-                const lat = Number(latest?.coordinates?.lat);
-                const lng = Number(latest?.coordinates?.lng);
-
-                return {
-                    id: deviceId,
-                    label: latest?.label || deviceId,
-                    area_label: latest?.area_label || deviceId,
-                    zone: latest?.zone || 'unknown',
-                    area: latest?.area || 'ESP32 Area',
-                    coordinates: {
-                        lat: Number.isFinite(lat) ? lat : fallback.lat,
-                        lng: Number.isFinite(lng) ? lng : fallback.lng,
-                    },
-                    hardware: {
-                        mcu: latest?.hardware?.mcu || 'ESP32',
-                        mic: latest?.hardware?.mic || 'INMP441',
-                        sensor: latest?.hardware?.sensor || null,
-                    },
-                    telemetry: {
-                        temperature_c: Number(latest?.temperature_c ?? latest?.telemetry?.temperature_c ?? 0),
-                        sound_db: Number(latest?.sound_db ?? latest?.telemetry?.sound_db ?? 0),
-                        dominant_hz: Number(latest?.dominant_hz ?? latest?.telemetry?.dominant_hz ?? 0),
-                        pressure_hpa: Number(latest?.pressure_hpa ?? latest?.telemetry?.pressure_hpa ?? 0) || null,
-                        peak_dbfs: Number(latest?.peak_dbfs ?? latest?.telemetry?.peak_dbfs ?? 0) || null,
-                        duration_sec: Number(latest?.duration_sec ?? latest?.telemetry?.duration_sec ?? 0) || null,
-                        recorded_at: latest?.recorded_at || new Date().toISOString(),
-                    },
-                    baseline: {
-                        temperature_c: 27,
-                        sound_db: 60,
-                        activity_det_per_hr: 65,
-                    },
-                    ml: {
-                        status: latest?.ml?.status || 'Unknown',
-                        eco_score: Number(latest?.ml?.eco_score ?? 0),
-                        eco_trend: latest?.ml?.eco_trend || null,
-                        confidence_pct: Number(latest?.ml?.confidence_pct ?? 0),
-                        activity_det_per_hr: Number(latest?.ml?.activity_det_per_hr ?? 0),
-                        species: {
-                            common_name: latest?.ml?.species?.common_name || 'Unknown',
-                            scientific_name: latest?.ml?.species?.scientific_name || '',
-                            image_url: latest?.ml?.species?.image_url || '',
-                        },
-                        topk: latest?.ml?.topk || [],
-                        recorded_at: latest?.recorded_at || new Date().toISOString(),
-                    },
-                    wifi: latest?.wifi || null,
-                    status: 'online',
-                };
-            },
-
-            async fetchFirebaseMockStations() {
-                const handles = this.getFirebaseHandles();
-                if (!handles) return [];
-                if (!this.firebaseAutoSyncEnabled) return [];
-
-                try {
-                    const rootRef = handles.ref(handles.db, 'esp32_mock');
-                    const rootSnap = await this.withTimeout(handles.get(rootRef), 'Fetch mock stations', 4000);
-                    if (!rootSnap.exists()) return [];
-
-                    const rows = rootSnap.val() || {};
-                    return Object.entries(rows).map(([deviceId, value]) => {
-                        const latest = value?.latest || value;
-                        return this.createStationFromMock(deviceId, latest);
-                    });
-                } catch (error) {
-                    const message = String(error?.message || '');
-                    if (message.includes('ERR_NAME_NOT_RESOLVED') || message.includes('timeout')) {
-                        this.firebaseAutoSyncEnabled = false;
-                    }
-                    return [];
-                }
-            },
-
-            async mergeWithFirebaseStations(apiStations) {
-                const firebaseStations = await this.fetchFirebaseMockStations();
-                return this.uniqueStations([...(Array.isArray(apiStations) ? apiStations : []), ...firebaseStations]);
-            },
-
             getFirebaseHandles() {
                 const db = window.firebaseDatabase;
                 const ref = window.firebaseRef;
@@ -1296,142 +1239,6 @@
                     return await Promise.race([promise, timeoutPromise]);
                 } finally {
                     clearTimeout(timerId);
-                }
-            },
-
-            async testFirebaseConnection() {
-                const handles = this.getFirebaseHandles();
-                if (!handles) {
-                    this.firebaseStatus = 'error';
-                    this.firebaseMessage = 'Firebase config missing. Check VITE_FIREBASE_* values in .env file.';
-                    return;
-                }
-
-                this.firebaseBusy = true;
-                this.firebaseStatus = 'testing';
-                this.firebaseAutoSyncEnabled = true;
-
-                try {
-                    const pingRef = handles.ref(handles.db, 'healthcheck/dashboard_ping');
-                    const payload = {
-                        source: 'dashboard',
-                        ts: new Date().toISOString(),
-                        ok: true,
-                    };
-
-                    await this.withTimeout(handles.set(pingRef, payload), 'Test write');
-                    const snap = await this.withTimeout(handles.get(pingRef), 'Test read');
-
-                    if (!snap.exists()) {
-                        throw new Error('Healthcheck data not found');
-                    }
-
-                    this.firebaseStatus = 'connected';
-                    this.firebaseMessage = `Connection OK: ${snap.val().ts}`;
-                } catch (error) {
-                    this.firebaseStatus = 'error';
-                    this.firebaseMessage = `Connection failed: ${error?.message || 'Unknown error'}`;
-                } finally {
-                    this.firebaseBusy = false;
-                }
-            },
-
-            buildMockPayload() {
-                const deviceId = this.mockDeviceId || 'esp32-001';
-                const soundDb = Number(this.mockSoundDb);
-                const temperatureC = Number(this.mockTemperatureC);
-                const latitude = Number(this.mockLatitude);
-                const longitude = Number(this.mockLongitude);
-                const dominantHz = Math.round(1800 + Math.random() * 2200);
-                const fallbackCoords = this.defaultMockCoordinates(deviceId);
-
-                return {
-                    device_id: deviceId,
-                    label: deviceId,
-                    area_label: `Mock ${deviceId}`,
-                    zone: 'forest',
-                    area: 'Mock ESP32 Area',
-                    sound_db: Number.isFinite(soundDb) ? soundDb : 60,
-                    temperature_c: Number.isFinite(temperatureC) ? temperatureC : 27,
-                    dominant_hz: dominantHz,
-                    coordinates: {
-                        lat: Number.isFinite(latitude) ? latitude : fallbackCoords.lat,
-                        lng: Number.isFinite(longitude) ? longitude : fallbackCoords.lng,
-                    },
-                    recorded_at: new Date().toISOString(),
-                    source: 'web-dashboard-mock',
-                };
-            },
-
-            async saveMockEsp32() {
-                const handles = this.getFirebaseHandles();
-                if (!handles) {
-                    this.firebaseStatus = 'error';
-                    this.firebaseMessage = 'Firebase config missing. Check VITE_FIREBASE_* values in .env file.';
-                    return;
-                }
-
-                this.firebaseBusy = true;
-                this.firebaseAutoSyncEnabled = true;
-                try {
-                    const payload = this.buildMockPayload();
-                    const basePath = `esp32_mock/${payload.device_id}`;
-                    const latestRef = handles.ref(handles.db, `${basePath}/latest`);
-                    const historyRef = handles.ref(handles.db, `${basePath}/history`);
-
-                    await this.withTimeout(handles.set(latestRef, payload), 'Save latest');
-                    await this.withTimeout(handles.push(historyRef, payload), 'Save history');
-
-                    this.mockLatest = payload;
-                    this.stations = await this.mergeWithFirebaseStations(this.stations);
-                    this.refreshLeafletMarkers(true);
-                    this.firebaseStatus = 'connected';
-                    this.firebaseMessage = `Saved mock data for ${payload.device_id}`;
-                } catch (error) {
-                    this.firebaseStatus = 'error';
-                    this.firebaseMessage = `Save failed: ${error?.message || 'Unknown error'}`;
-                } finally {
-                    this.firebaseBusy = false;
-                }
-            },
-
-            async loadMockEsp32() {
-                const handles = this.getFirebaseHandles();
-                if (!handles) {
-                    this.firebaseStatus = 'error';
-                    this.firebaseMessage = 'Firebase config missing. Check VITE_FIREBASE_* values in .env file.';
-                    return;
-                }
-
-                this.firebaseBusy = true;
-                this.firebaseAutoSyncEnabled = true;
-                try {
-                    const deviceId = this.mockDeviceId || 'esp32-001';
-                    const latestRef = handles.ref(handles.db, `esp32_mock/${deviceId}/latest`);
-                    const snap = await this.withTimeout(handles.get(latestRef), 'Load latest');
-
-                    if (!snap.exists()) {
-                        this.mockLatest = null;
-                        this.firebaseStatus = 'connected';
-                        this.firebaseMessage = `No data found for ${deviceId}`;
-                        return;
-                    }
-
-                    this.mockLatest = snap.val();
-                    if (this.mockLatest?.coordinates?.lat != null) this.mockLatitude = Number(this.mockLatest.coordinates.lat);
-                    if (this.mockLatest?.coordinates?.lng != null) this.mockLongitude = Number(this.mockLatest.coordinates.lng);
-                    if (this.mockLatest?.temperature_c != null) this.mockTemperatureC = Number(this.mockLatest.temperature_c);
-                    if (this.mockLatest?.sound_db != null) this.mockSoundDb = Number(this.mockLatest.sound_db);
-
-                    this.stations = await this.mergeWithFirebaseStations(this.stations);
-                    this.refreshLeafletMarkers(true);
-                    this.firebaseStatus = 'connected';
-                    this.firebaseMessage = `Loaded latest data for ${deviceId}`;
-                } catch (error) {
-                    this.firebaseStatus = 'error';
-                    this.firebaseMessage = `Load failed: ${error?.message || 'Unknown error'}`;
-                } finally {
-                    this.firebaseBusy = false;
                 }
             },
 
