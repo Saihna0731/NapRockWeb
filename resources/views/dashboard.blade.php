@@ -575,7 +575,7 @@
             markerLayer: null,
 
             // Direct Python API for realtime species
-            directApiUrl: 'https://bird-edge-api-910518834273.asia-east1.run.app/api/v1/sensor/latest',
+            directApiUrl: 'https://bird-edge-api-879683801404.asia-east1.run.app/api/v1/sensor/latest',
             directApiKey: 'birdedge_KfBfwrtXzd7IEeizQLc-iK9EVaJYzp1aJq_AK6p-qdU',
             directDevice: null,
             directPollTimer: null,

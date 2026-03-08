@@ -358,7 +358,7 @@
             spectrogramColumn: 0,
             spectrogramCtx: null,
 
-            apiUrl: 'https://bird-edge-api-910518834273.asia-east1.run.app/api/v1/sensor/latest',
+            apiUrl: 'https://bird-edge-api-879683801404.asia-east1.run.app/api/v1/sensor/latest',
             apiKey: 'birdedge_KfBfwrtXzd7IEeizQLc-iK9EVaJYzp1aJq_AK6p-qdU',
 
             get lastUpdatedLabel() {

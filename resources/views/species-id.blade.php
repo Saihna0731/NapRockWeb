@@ -210,7 +210,7 @@
 <script>
 function speciesCatalog() {
     const STORAGE_KEY = 'est_species_catalog';
-    const API_URL = 'https://bird-edge-api-910518834273.asia-east1.run.app/api/v1/sensor/latest';
+    const API_URL = 'https://bird-edge-api-879683801404.asia-east1.run.app/api/v1/sensor/latest';
     const API_KEY = 'birdedge_KfBfwrtXzd7IEeizQLc-iK9EVaJYzp1aJq_AK6p-qdU';
 
     return {
