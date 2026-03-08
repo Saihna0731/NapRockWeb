@@ -351,7 +351,7 @@
             error: null,
             lastUpdatedAt: null,
             pollTimer: null,
-            paused: false,
+            paused: true, // Start paused to allow manual user interact for audio
             waveformBars: Array.from({ length: 60 }, () => 10 + Math.random() * 15),
             waveformTimer: null,
             spectrogramTimer: null,
@@ -359,7 +359,15 @@
             spectrogramCtx: null,
 
             apiUrl: 'https://bird-edge-api-879683801404.asia-east1.run.app/api/v1/sensor/latest',
+            streamUrl: 'https://bird-edge-api-879683801404.asia-east1.run.app/api/v1/stream',
             apiKey: 'birdedge_KfBfwrtXzd7IEeizQLc-iK9EVaJYzp1aJq_AK6p-qdU',
+
+            audioElement: null,
+            audioContext: null,
+            analyser: null,
+            audioSource: null,
+            freqDataArray: null,
+            timeDataArray: null,
 
             get lastUpdatedLabel() {
                 if (!this.lastUpdatedAt) return '—';
@@ -367,22 +375,81 @@
             },
 
             init() {
+                // Initialize audio element
+                this.audioElement = new Audio();
+                this.audioElement.crossOrigin = "anonymous";
+                
                 this.fetchSensor();
                 this.pollTimer = setInterval(() => {
                     if (!this.paused) this.fetchSensor();
                 }, 3000);
-                this.startWaveformAnimation();
-                this.$nextTick(() => this.initSpectrogram());
+                
+                // Set up visualizers
+                this.$nextTick(() => {
+                    this.initSpectrogram();
+                    this.startWaveformAnimation();
+                });
 
                 window.addEventListener('beforeunload', () => {
                     if (this.pollTimer) clearInterval(this.pollTimer);
                     if (this.waveformTimer) clearInterval(this.waveformTimer);
                     if (this.spectrogramTimer) clearInterval(this.spectrogramTimer);
+                    if (this.audioElement) {
+                        this.audioElement.pause();
+                        this.audioElement.src = '';
+                    }
+                    if (this.audioContext) {
+                        this.audioContext.close();
+                    }
                 });
             },
 
-            togglePause() {
+            async togglePause() {
                 this.paused = !this.paused;
+                
+                if (this.paused) {
+                    if (this.audioElement) {
+                        this.audioElement.pause();
+                    }
+                } else {
+                    if (!this.audioContext) {
+                        this.initAudio();
+                    }
+                    
+                    if (this.audioContext && this.audioContext.state === 'suspended') {
+                        await this.audioContext.resume();
+                    }
+                    
+                    if (this.audioElement) {
+                        if (!this.audioElement.src || this.audioElement.src === window.location.href) {
+                            this.audioElement.src = `${this.streamUrl}?api_key=${this.apiKey}`;
+                        }
+                        try {
+                            await this.audioElement.play();
+                        } catch (e) {
+                            console.error("Audio play failed:", e);
+                        }
+                    }
+                }
+            },
+
+            initAudio() {
+                try {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.audioContext = new AudioContext();
+                    this.analyser = this.audioContext.createAnalyser();
+                    this.analyser.fftSize = 2048;
+                    
+                    this.audioSource = this.audioContext.createMediaElementSource(this.audioElement);
+                    this.audioSource.connect(this.analyser);
+                    this.analyser.connect(this.audioContext.destination);
+                    
+                    const bufferLength = this.analyser.frequencyBinCount;
+                    this.freqDataArray = new Uint8Array(bufferLength);
+                    this.timeDataArray = new Uint8Array(bufferLength);
+                } catch (e) {
+                    console.error("Web Audio API not supported", e);
+                }
             },
 
             // ──── Canvas Spectrogram ────
@@ -424,46 +491,42 @@
                 }
 
                 const drawX = this.spectrogramColumn >= w ? w - 1 : x;
-
-                const soundDb = this.device?.microphone?.sound_db ?? 20;
-                const dominantHz = this.device?.microphone?.dominant_hz ?? 500;
-                const peakDbfs = Math.abs(this.device?.microphone?.peak_dbfs ?? -30);
-
-                // Generate frequency band intensities
                 const bands = 64;
-                const dominantBand = Math.floor((dominantHz / 8000) * bands);
 
-                for (let b = 0; b < bands; b++) {
-                    const y = h - Math.floor((b / bands) * h) - Math.floor(h / bands);
-                    const bandH = Math.max(1, Math.floor(h / bands));
+                if (this.analyser && this.freqDataArray && !this.paused) {
+                    this.analyser.getByteFrequencyData(this.freqDataArray);
+                    
+                    const step = Math.floor(this.analyser.frequencyBinCount / bands);
 
-                    // Base intensity from sound level
-                    let intensity = (soundDb / 100) * 0.3;
+                    for (let b = 0; b < bands; b++) {
+                        // Gather intensity from dataArray over chunk width
+                        let sum = 0;
+                        for (let k = 0; k < step; k++) {
+                            sum += this.freqDataArray[b * step + k] || 0;
+                        }
+                        const avg = (sum / step) / 255.0;
+                        let intensity = avg * 2.0; // Boost visibility
+                        intensity = Math.max(0, Math.min(1, intensity));
 
-                    // Boost near dominant frequency
-                    const distFromDominant = Math.abs(b - dominantBand);
-                    if (distFromDominant < 6) {
-                        intensity += (1 - distFromDominant / 6) * (soundDb / 80) * 0.7;
+                        const y = h - Math.floor((b / bands) * h) - Math.floor(h / bands);
+                        const bandH = Math.max(1, Math.floor(h / bands));
+
+                        const r = intensity > 0.7 ? Math.floor((intensity - 0.7) / 0.3 * 200) : 0;
+                        const g = Math.floor(intensity * 220 + 10);
+                        const bVal = intensity > 0.85 ? Math.floor((intensity - 0.85) / 0.15 * 80) : 0;
+                        const a = Math.max(0.02, intensity * 0.95);
+
+                        ctx.fillStyle = `rgba(${r}, ${g}, ${bVal}, ${a})`;
+                        ctx.fillRect(drawX, y, 1, bandH);
                     }
-
-                    // Harmonics
-                    const harmonic2 = dominantBand * 2;
-                    const harmonic3 = dominantBand * 3;
-                    if (Math.abs(b - harmonic2) < 3) intensity += 0.15;
-                    if (Math.abs(b - harmonic3) < 2) intensity += 0.08;
-
-                    // Random noise
-                    intensity += (Math.random() - 0.3) * 0.08;
-                    intensity = Math.max(0, Math.min(1, intensity));
-
-                    // Color: dark green → bright green → yellow → white
-                    const r = intensity > 0.7 ? Math.floor((intensity - 0.7) / 0.3 * 200) : 0;
-                    const g = Math.floor(intensity * 220 + 10);
-                    const bVal = intensity > 0.85 ? Math.floor((intensity - 0.85) / 0.15 * 80) : 0;
-                    const a = Math.max(0.02, intensity * 0.95);
-
-                    ctx.fillStyle = `rgba(${r}, ${g}, ${bVal}, ${a})`;
-                    ctx.fillRect(drawX, y, 1, bandH);
+                } else {
+                    // Fallback visualizer when audio is not connected or streaming fake data isn't needed
+                    for (let b = 0; b < bands; b++) {
+                        const y = h - Math.floor((b / bands) * h) - Math.floor(h / bands);
+                        const bandH = Math.max(1, Math.floor(h / bands));
+                        ctx.fillStyle = `rgba(0, 0, 0, 0)`;
+                        ctx.fillRect(drawX, y, 1, bandH);
+                    }
                 }
 
                 // Thin time-cursor line
@@ -479,23 +542,40 @@
             startWaveformAnimation() {
                 this.waveformTimer = setInterval(() => {
                     if (this.paused) return;
-                    if (!this.device?.microphone) return;
 
-                    const soundDb = this.device.microphone.sound_db ?? 40;
-                    const peakDbfs = Math.abs(this.device.microphone.peak_dbfs ?? -30);
-                    const dominantHz = this.device.microphone.dominant_hz ?? 500;
+                    if (this.analyser && this.timeDataArray) {
+                        this.analyser.getByteTimeDomainData(this.timeDataArray);
+                        const step = Math.floor(this.analyser.frequencyBinCount / this.waveformBars.length);
+                        
+                        this.waveformBars = this.waveformBars.map((_, i) => {
+                            let sum = 0;
+                            for (let k = 0; k < step; k++) {
+                                // Values are base 128
+                                const val = this.timeDataArray[i * step + k];
+                                const norm = Math.abs(val - 128) / 128.0;
+                                sum += norm;
+                            }
+                            const avgNorm = sum / step;
+                            // scale to 0-100%
+                            return Math.max(3, Math.min(100, (avgNorm * 200) + 10)); // Scale to visible bars
+                        });
+                    } else if (this.device?.microphone) {
+                        // Fallback math logic if audio context missing
+                        const soundDb = this.device.microphone.sound_db ?? 40;
+                        const peakDbfs = Math.abs(this.device.microphone.peak_dbfs ?? -30);
 
-                    const baseHeight = Math.min(85, Math.max(8, soundDb * 1.1));
-                    const variance = Math.min(35, peakDbfs * 0.7);
+                        const baseHeight = Math.min(85, Math.max(8, soundDb * 1.1));
+                        const variance = Math.min(35, peakDbfs * 0.7);
 
-                    this.waveformBars = this.waveformBars.map((_, i) => {
-                        const t = Date.now() / 180;
-                        const phase1 = Math.sin(t + i * 0.25) * variance * 0.4;
-                        const phase2 = Math.sin(t * 1.7 + i * 0.15) * variance * 0.2;
-                        const noise = (Math.random() - 0.5) * variance * 0.3;
-                        return Math.max(3, Math.min(95, baseHeight + phase1 + phase2 + noise));
-                    });
-                }, 100);
+                        this.waveformBars = this.waveformBars.map((_, i) => {
+                            const t = Date.now() / 180;
+                            const phase1 = Math.sin(t + i * 0.25) * variance * 0.4;
+                            const phase2 = Math.sin(t * 1.7 + i * 0.15) * variance * 0.2;
+                            const noise = (Math.random() - 0.5) * variance * 0.3;
+                            return Math.max(3, Math.min(95, baseHeight + phase1 + phase2 + noise));
+                        });
+                    }
+                }, 80); // reduced from 100 to 80 for more fluid waveform
             },
 
             // ──── API polling ────
