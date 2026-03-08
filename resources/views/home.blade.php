@@ -65,7 +65,7 @@
             </div>
             <div class="relative group">
                 <div class="absolute -inset-4 bg-primary/20 rounded-full blur-3xl opacity-50 group-hover:opacity-70 transition-opacity"></div>
-                <div class="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3] bg-[#dbe6df] dark:bg-[#2a3d31]">
+                <div class="relative rounded-2xl overflow-hidden shadow-2xl aspect-4/3 bg-border-muted dark:bg-[#2a3d31]">
                     <img alt="Beautiful forest bird singing on a branch" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgzUsWuPc4LDO2eqSWiztXfW02A7LBHGJH7GLHX8nj8rKr2BoNqP4CZgWNAeoffL0ZWsdxu0CX_R-txgqPiOD6F41Kr4vMBIbM_4jdxyn4vhPiOKHa11ibvj0ATfFKsP80Zt_9-JBfl94fA7M2C1wxfY6HBRxRafB-AA-6Zpd2T6OeZ3pzTSno3VUfEFPvaOvtSNFiOfqGXNmXTaWGbSpvSjqP1XmGWcRb0CunOOHOcm2J6wM7r3tCXMjkBh7coLvkZr7h0DeleHU"/>
                     <div class="absolute bottom-6 right-6 bg-white/90 dark:bg-[#111813]/90 backdrop-blur p-4 rounded-xl shadow-lg border border-white/20">
                         <div class="flex items-center gap-3">
@@ -77,6 +77,59 @@
                                 <p class="text-sm font-bold">ESP32 Monitoring Active</p>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- ===== DEMO VIDEO SECTION ===== --}}
+    <section class="max-w-[1200px] mx-auto px-6 pb-20">
+        <div class="bg-[#f8faf9] dark:bg-[#111813] border border-[#dbe6df] dark:border-[#2a3d31] rounded-[2rem] p-8 md:p-12 shadow-sm relative overflow-hidden">
+            <div class="absolute -top-40 -right-40 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center relative z-10">
+                <div class="flex flex-col gap-6 order-2 lg:order-1">
+                    <div class="flex items-center gap-3">
+                        <span class="relative flex size-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                            <span class="relative inline-flex rounded-full size-3 bg-primary"></span>
+                        </span>
+                        <span class="text-xs font-black uppercase tracking-widest text-[#111813] dark:text-white">Product Demo</span>
+                    </div>
+                    
+                    <h2 class="text-3xl md:text-4xl font-black leading-tight">
+                        See EST in <span class="text-primary">Action</span>
+                    </h2>
+                    
+                    <p class="text-gray-600 dark:text-gray-400 leading-relaxed">
+                        Watch how our bioacoustic sensors capture real-time audio from the wild and translate it directly into actionable ecosystem data. From sound waves to species identification—experience the complete pipeline.
+                    </p>
+                    
+                    <ul class="space-y-3 mt-2">
+                        <li class="flex items-center gap-3 text-sm font-medium">
+                            <span class="material-symbols-outlined text-primary">check_circle</span> Live Spectrogram Analysis
+                        </li>
+                        <li class="flex items-center gap-3 text-sm font-medium">
+                            <span class="material-symbols-outlined text-primary">check_circle</span> Edge AI Species Matching
+                        </li>
+                        <li class="flex items-center gap-3 text-sm font-medium">
+                            <span class="material-symbols-outlined text-primary">check_circle</span> Real-time Dashboard Sync
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="order-1 lg:order-2">
+                    <div class="rounded-2xl overflow-hidden shadow-xl border border-[#dbe6df] dark:border-[#2a3d31] bg-black aspect-video relative">
+                        <iframe 
+                            class="absolute inset-0 w-full h-full" 
+                            src="https://www.youtube.com/embed/GpJwqTpEWzQ?autoplay=1&mute=1&loop=1&playlist=GpJwqTpEWzQ&si=xm0_40gVgx2kyBrB" 
+                            title="YouTube video player" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                            referrerpolicy="strict-origin-when-cross-origin" 
+                            allowfullscreen>
+                        </iframe>
                     </div>
                 </div>
             </div>
